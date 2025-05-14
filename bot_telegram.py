@@ -32,10 +32,10 @@ def send_new(update: Update, context: CallbackContext):
 
     history = load_history()
     results = []
-    results += fetch_nhentai(limit=10)
-    results += fetch_rule34(limit=10)
-    results += fetch_reddit(limit=10)
-    results += fetch_xvideos(limit=10)
+    results += fetch_nhentai(limit=20)
+    results += fetch_rule34(limit=20)
+    results += fetch_reddit(limit=20)
+    results += fetch_xvideos(limit=20)
 
     sent = 0
     for item in results:
@@ -50,7 +50,7 @@ def send_new(update: Update, context: CallbackContext):
             )
             history.add(item['link'])
             sent += 1
-            if sent >= 5:
+            if sent >= 50:
                 break
         except Exception as e:
             print(f"[!] Errore invio: {e}")
