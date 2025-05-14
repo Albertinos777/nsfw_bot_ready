@@ -1,16 +1,23 @@
-from telegram import Update, InputMediaPhoto
-from telegram.ext import Updater, CommandHandler, CallbackContext
+import os
+import json
+from telegram import Update, Bot
+from telegram.ext import Dispatcher, CommandHandler, CallbackContext
+from telegram.ext import Updater
+from flask import Flask, request
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
 from fetcher_xvideos import fetch_xvideos
-import json
-import os
 
-TOKEN = "8085463291:AAHUAN0Jb_-RMdYrrxQFX2j62dcu5bLnQXQ"
+TOKEN = os.environ.get("8085463291:AAHUAN0Jb_-RMdYrrxQFX2j62dcu5bLnQXQ")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # es. https://nsfwbot.onrender.com
+
 HISTORY_FILE = "sent_history.json"
 
-# Carica contenuti già inviati per evitare duplicati
+app = Flask(__name__)
+bot = Bot(token=TOKEN)
+dispatcher = Dispatcher(bot, None, workers=4, use_context=True)
+
 def load_history():
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r") as f:
@@ -21,27 +28,25 @@ def save_history(history):
     with open(HISTORY_FILE, "w") as f:
         json.dump(list(history), f)
 
-# Comando /start
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Benvenuto. Scrivi /new per ricevere contenuti NSFW.")
-
-# Comando /new per mandare contenuti
-def send_new(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-    update.message.reply_text("📡 Cerco nuovi contenuti...")
+def send_content(update: Update, context: CallbackContext, mode="all"):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, "📡 Cerco nuovi contenuti...")
 
     history = load_history()
     results = []
-    results += fetch_nhentai(limit=50)
-    results += fetch_rule34(limit=50)
-    results += fetch_reddit(limit=50, sort="new")
-    results += fetch_xvideos(limit=50)
+
+    if mode in ["all", "hentai"]:
+        results += fetch_nhentai(limit=20)
+        results += fetch_rule34(limit=20)
+    if mode in ["all", "cosplay"]:
+        results += fetch_reddit(limit=20, sort="new")
+    if mode in ["all", "real"]:
+        results += fetch_xvideos(limit=20)
 
     sent = 0
     for item in results:
         if item['link'] in history:
             continue
-
         try:
             context.bot.send_photo(
                 chat_id=chat_id,
@@ -52,8 +57,7 @@ def send_new(update: Update, context: CallbackContext):
             sent += 1
             if sent >= 30:
                 break
-        except Exception as e:
-            print(f"[!] Errore invio: {e}")
+        except:
             continue
 
     if sent == 0:
@@ -61,14 +65,27 @@ def send_new(update: Update, context: CallbackContext):
     else:
         save_history(history)
 
-# Main loop
-def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("new", send_new))
-    updater.start_polling()
-    updater.idle()
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Benvenuto nel tuo bot NSFW. Usa /new, /hentai, /cosplay, /real")
+
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("new", lambda u, c: send_content(u, c, "all")))
+dispatcher.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
+dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_content(u, c, "cosplay")))
+dispatcher.add_handler(CommandHandler("real", lambda u, c: send_content(u, c, "real")))
+dispatcher.add_handler(CommandHandler("more", lambda u, c: send_content(u, c, "all")))
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), bot)
+    dispatcher.process_update(update)
+    return "OK"
+
+@app.route("/", methods=["GET"])
+def index():
+    return "Bot NSFW attivo."
 
 if __name__ == "__main__":
-    main()
+    bot.delete_webhook()
+    bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+    app.run(host="0.0.0.0", port=10000)
