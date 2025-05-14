@@ -32,10 +32,10 @@ def send_new(update: Update, context: CallbackContext):
 
     history = load_history()
     results = []
-    results += fetch_nhentai(limit=20)
-    results += fetch_rule34(limit=20)
-    results += fetch_reddit(limit=20)
-    results += fetch_xvideos(limit=20)
+    results += fetch_nhentai(limit=50)
+    results += fetch_rule34(limit=50)
+    results += fetch_reddit(limit=50, sort="new")
+    results += fetch_xvideos(limit=50)
 
     sent = 0
     for item in results:
