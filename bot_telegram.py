@@ -50,7 +50,7 @@ def send_new(update: Update, context: CallbackContext):
             )
             history.add(item['link'])
             sent += 1
-            if sent >= 50:
+            if sent >= 30:
                 break
         except Exception as e:
             print(f"[!] Errore invio: {e}")
