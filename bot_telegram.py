@@ -86,7 +86,4 @@ def index():
     return "Bot NSFW attivo."
 
 if __name__ == "__main__":
-    info = bot.get_webhook_info()
-    if not info.url or info.url != f"{WEBHOOK_URL}/{TOKEN}":
-        bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
     app.run(host="0.0.0.0", port=10000)
