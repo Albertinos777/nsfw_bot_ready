@@ -9,7 +9,7 @@ from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
 from fetcher_xvideos import fetch_xvideos
 
-TOKEN = os.environ.get("8085463291:AAHUAN0Jb_-RMdYrrxQFX2j62dcu5bLnQXQ")
+TOKEN = os.environ.get("TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # es. https://nsfwbot.onrender.com
 
 HISTORY_FILE = "sent_history.json"
