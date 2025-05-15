@@ -21,7 +21,8 @@ dispatcher = Dispatcher(bot, None, use_context=True)
 CACHE_FILES = {
     "hentai": "cache_hentai.json",
     "cosplay": "cache_cosplay.json",
-    "real": "cache_real.json"
+    "real": "cache_real.json",
+    "reddit_all": "cache_reddit.json"
 }
 
 loop_enabled = {}
@@ -123,6 +124,7 @@ def cmd_new(update: Update, context: CallbackContext):
     send_content(update, context, "hentai")
     send_content(update, context, "cosplay")
     send_content(update, context, "real")
+    send_reddit(update, context, "reddit_all")
 
 # --- LOOP ---
 
@@ -171,6 +173,7 @@ dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("new", cmd_new))
 dispatcher.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
 dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_reddit(u, c, "cosplay")))
+dispatcher.add_handler(CommandHandler("reddit", lambda u, c: send_reddit(u, c, "reddit_all")))
 dispatcher.add_handler(CommandHandler("real", lambda u, c: send_content(u, c, "real")))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("loopon", loop_on))
