@@ -9,7 +9,9 @@ from telegram.ext import Dispatcher, CommandHandler, CallbackContext
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
-from fetcher_xvideos import fetch_xvideos
+from fetcher_spankbang import fetch_spankbang
+from fetcher_pornhub import fetch_pornhub
+from fetcher_audio import fetch_audio
 
 TOKEN = os.environ.get("TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
@@ -25,7 +27,10 @@ CACHE_FILES = {
     "reddit_all": "cache_reddit.json"
 }
 
+FAV_FILE = "favorites.json"
 loop_enabled = {}
+
+# --------------- UTIL ------------------
 
 def load_cache(mode):
     file = CACHE_FILES[mode]
@@ -38,76 +43,71 @@ def save_cache(mode, cache):
     with open(CACHE_FILES[mode], "w") as f:
         json.dump(list(cache), f)
 
-def is_banned(title):
-    banned = ['futanari', 'yaoi', 'gay', 'trap', 'dickgirl']
-    return any(bad in title.lower() for bad in banned)
+def load_favorites():
+    if os.path.exists(FAV_FILE):
+        with open(FAV_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_favorite(item):
+    favs = load_favorites()
+    if item not in favs:
+        favs.append(item)
+        with open(FAV_FILE, "w") as f:
+            json.dump(favs, f)
+
+def is_banned(title_or_url):
+    banned = ['futanari', 'yaoi', 'gay', 'trap', 'dickgirl', 'gifv', 'svg', 'tiff']
+    return any(bad in title_or_url.lower() for bad in banned)
+
+def send_media(bot, chat_id, item):
+    ext = item.get("ext", item['link'].split('.')[-1].lower())
+    caption = f"{item['title'][:100]}\n🔗 {item['link']}"
+
+    try:
+        if ext in ['mp4', 'webm', 'gif']:
+            bot.send_video(chat_id=chat_id, video=item['link'], caption=caption)
+        elif ext in ['jpg', 'jpeg', 'png']:
+            bot.send_photo(chat_id=chat_id, photo=item['thumb'], caption=caption)
+        else:
+            bot.send_document(chat_id=chat_id, document=item['link'], caption=caption)
+    except:
+        bot.send_message(chat_id=chat_id, text=f"⚠️ Non riesco a caricare:\n{item['link']}")
+
+# --------------- HANDLERS ------------------
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, f"📡 Cerco nuovi contenuti per /{mode}...")
+    context.bot.send_message(chat_id, f"📡 Cerco contenuti per /{mode}...")
 
     cache = load_cache(mode)
     results = []
 
     if mode == "hentai":
-        results += fetch_nhentai(limit=30)
-        results += fetch_rule34(limit=30)
+        results += fetch_nhentai(limit=20)
+        results += fetch_rule34(limit=20)
     elif mode == "cosplay":
-        results += fetch_reddit(limit=30, sort="new")
+        results += fetch_reddit(limit=30, sort="new", target="cosplay")
     elif mode == "real":
-        results += fetch_xvideos(limit=30)
+        results += fetch_spankbang(limit=15)
+        results += fetch_pornhub(limit=15)
+    elif mode == "reddit_all":
+        results += fetch_reddit(limit=30, sort="hot", target="reddit_all")
 
     sent = 0
     for item in results:
-        if item['link'] in cache or is_banned(item['title']):
+        if item['link'] in cache or is_banned(item['title'] + item['link']):
             continue
-        try:
-            context.bot.send_photo(
-                chat_id=chat_id,
-                photo=item['thumb'],
-                caption=f"{item['title'][:100]}\n🔗 {item['link']}"
-            )
-            cache.add(item['link'])
-            sent += 1
-            if sent >= 10:
-                break
-        except Exception as e:
-            print(f"[!] Errore invio: {e}")
-            continue
+        send_media(context.bot, chat_id, item)
+        cache.add(item['link'])
+        sent += 1
+        if sent >= 10:
+            break
 
     save_cache(mode, cache)
 
     if sent == 0:
         context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
-        
-def send_reddit(update, context, mode="cosplay"):
-    chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, f"📡 Cerco contenuti Reddit ({mode})...")
-    cache = load_cache(mode)
-    results = fetch_reddit(limit=30, target=mode)
-
-    sent = 0
-    for item in results:
-        if item['link'] in cache or is_banned(item['title']):
-            continue
-        try:
-            ext = item.get("ext", "")
-            if ext in ['gif', 'webm', 'mp4']:
-                context.bot.send_video(chat_id=chat_id, video=item['link'], caption=f"{item['title']}")
-            else:
-                context.bot.send_photo(chat_id=chat_id, photo=item['thumb'], caption=f"{item['title']}")
-            cache.add(item['link'])
-            sent += 1
-            if sent >= 10:
-                break
-        except Exception as e:
-            print(f"[!] Reddit send error: {e}")
-            continue
-
-    save_cache(mode, cache)
-
-    if sent == 0:
-        context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto Reddit nuovo.")
 
 def reset_cache(update: Update, context: CallbackContext):
     for mode in CACHE_FILES:
@@ -117,67 +117,113 @@ def reset_cache(update: Update, context: CallbackContext):
 
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
-        "Benvenuto. Comandi:\n/new\n/hentai\n/cosplay\n/real\n/resetcache\n/loopon\n/loopoff"
+        "Benvenuto! Comandi disponibili:\n"
+        "/new\n/hentai\n/cosplay\n/real\n/reddit\n/audio\n"
+        "/loopon\n/loopoff\n/resetcache\n/fav <link>\n/favorites\n/random <tag>"
     )
 
 def cmd_new(update: Update, context: CallbackContext):
     send_content(update, context, "hentai")
     send_content(update, context, "cosplay")
     send_content(update, context, "real")
-    send_reddit(update, context, "reddit_all")
+    send_content(update, context, "reddit_all")
 
-# --- LOOP ---
+def send_audio(update: Update, context: CallbackContext):
+    results = fetch_audio(limit=3)
+    for item in results:
+        try:
+            context.bot.send_audio(chat_id=update.effective_chat.id, audio=item['link'], caption=item['title'])
+        except:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f"❌ Errore audio:\n{item['link']}")
+
+def add_fav(update: Update, context: CallbackContext):
+    args = context.args
+    if not args:
+        update.message.reply_text("❌ Devi fornire il link del contenuto.")
+        return
+    link = args[0]
+    save_favorite({"title": "Preferito", "link": link, "thumb": link})
+    update.message.reply_text("⭐️ Salvato nei preferiti!")
+
+def list_fav(update: Update, context: CallbackContext):
+    favs = load_favorites()
+    if not favs:
+        update.message.reply_text("📭 Nessun contenuto nei preferiti.")
+        return
+    for item in favs[-10:]:
+        send_media(context.bot, update.effective_chat.id, item)
+
+def random_tag(update: Update, context: CallbackContext):
+    if not context.args:
+        update.message.reply_text("Esempio: /random creampie")
+        return
+    tag = context.args[0].lower()
+    cache = load_cache("reddit_all")
+    results = fetch_reddit(limit=40, sort="hot", target="reddit_all")
+    for item in results:
+        if tag not in item['title'].lower() or item['link'] in cache:
+            continue
+        send_media(context.bot, update.effective_chat.id, item)
+        cache.add(item['link'])
+        save_cache("reddit_all", cache)
+        return
+    update.message.reply_text("❌ Nessun risultato trovato.")
+
+# --------------- LOOP ------------------
 
 def loop_worker(chat_id):
     while loop_enabled.get(chat_id, False):
-        for mode in ["hentai", "cosplay", "real"]:
+        for mode in ["hentai", "cosplay", "real", "reddit_all"]:
             try:
                 cache = load_cache(mode)
                 results = []
                 if mode == "hentai":
-                    results += fetch_nhentai(limit=10)
-                    results += fetch_rule34(limit=10)
+                    results += fetch_nhentai(limit=5)
+                    results += fetch_rule34(limit=5)
                 elif mode == "cosplay":
-                    results += fetch_reddit(limit=10, sort="new")
+                    results += fetch_reddit(limit=5, sort="new", target="cosplay")
                 elif mode == "real":
-                    results += fetch_xvideos(limit=10)
+                    results += fetch_spankbang(limit=5)
+                    results += fetch_pornhub(limit=5)
+                elif mode == "reddit_all":
+                    results += fetch_reddit(limit=5, sort="hot", target="reddit_all")
                 for item in results:
-                    if item['link'] in cache or is_banned(item['title']):
+                    if item['link'] in cache or is_banned(item['title'] + item['link']):
                         continue
-                    bot.send_photo(
-                        chat_id=chat_id,
-                        photo=item['thumb'],
-                        caption=f"{item['title'][:100]}\n🔗 {item['link']}"
-                    )
+                    send_media(bot, chat_id, item)
                     cache.add(item['link'])
                     save_cache(mode, cache)
                     break
             except Exception as e:
                 print(f"[!] Loop error: {e}")
-        time.sleep(3600)  # ogni ora
+        time.sleep(3600)
 
 def loop_on(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     loop_enabled[chat_id] = True
-    update.message.reply_text("🔁 Loop automatico attivato (ogni ora).")
+    update.message.reply_text("🔁 Loop automatico attivato.")
     threading.Thread(target=loop_worker, args=(chat_id,), daemon=True).start()
 
 def loop_off(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     loop_enabled[chat_id] = False
-    update.message.reply_text("⛔ Loop automatico disattivato.")
+    update.message.reply_text("⛔ Loop disattivato.")
 
-# --- TELEGRAM ROUTING ---
+# --------------- DISPATCH ------------------
 
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("new", cmd_new))
 dispatcher.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
-dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_reddit(u, c, "cosplay")))
-dispatcher.add_handler(CommandHandler("reddit", lambda u, c: send_reddit(u, c, "reddit_all")))
+dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_content(u, c, "cosplay")))
 dispatcher.add_handler(CommandHandler("real", lambda u, c: send_content(u, c, "real")))
+dispatcher.add_handler(CommandHandler("reddit", lambda u, c: send_content(u, c, "reddit_all")))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("loopon", loop_on))
 dispatcher.add_handler(CommandHandler("loopoff", loop_off))
+dispatcher.add_handler(CommandHandler("fav", add_fav))
+dispatcher.add_handler(CommandHandler("favorites", list_fav))
+dispatcher.add_handler(CommandHandler("random", random_tag))
+dispatcher.add_handler(CommandHandler("audio", send_audio))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
@@ -187,8 +233,7 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot NSFW attivo."
+    return "NSFW Bot attivo."
 
 if __name__ == "__main__":
-    print("✅ Bot pronto (Render webhook)")
     app.run(host="0.0.0.0", port=10000)
