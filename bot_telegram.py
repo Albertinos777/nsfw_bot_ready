@@ -61,10 +61,9 @@ def is_banned(title_or_url):
 
 def send_real(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📡 Cerco video reali...")
+    context.bot.send_message(chat_id, "📡 Cerco video reali (HQPorner o Reddit)...")
 
     results = fetch_hqporner(limit=10)
-
     if not results:
         results = fetch_reddit(limit=15, sort="top", target="reddit_all")
 
@@ -99,9 +98,8 @@ def send_media(bot, chat_id, item):
         else:
             bot.send_document(chat_id=chat_id, document=link, caption=caption, timeout=30)
     except Exception as e:
-        print(f"[!] Errore media: {e}")
+        print(f"[!] Errore nel caricamento media: {e}")
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
-
 
 
 # --------------- HANDLERS ------------------
@@ -113,30 +111,46 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     cache = load_cache(mode)
     results = []
 
-    if mode == "hentai":
-        results += fetch_nhentai(limit=20)
-        results += fetch_rule34(limit=20)
-    elif mode == "cosplay":
-        results += fetch_reddit(limit=30, sort="new", target="cosplay")
-    elif mode == "real":
-        results += fetch_hqporner(limit=15)  # ✅ usa solo HQPorner ora
-    elif mode == "reddit_all":
-        results += fetch_reddit(limit=30, sort="hot", target="reddit_all")
+    try:
+        if mode == "hentai":
+            results += fetch_nhentai(limit=20)
+            results += fetch_rule34(limit=20)
 
-    sent = 0
-    for item in results:
-        if item['link'] in cache or is_banned(item['title'] + item['link']):
-            continue
-        send_media(context.bot, chat_id, item)
-        cache.add(item['link'])
-        sent += 1
-        if sent >= 10:
-            break
+        elif mode == "cosplay":
+            results += fetch_reddit(limit=30, sort="new", target="cosplay")
 
-    save_cache(mode, cache)
+        elif mode == "real":
+            results += fetch_hqporner(limit=15)
+            if not results:
+                results += fetch_reddit(limit=20, sort="top", target="reddit_all")
 
-    if sent == 0:
-        context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
+        elif mode in ["reddit_all", "gif", "creampie", "facial", "milf", "ass"]:
+            results += fetch_reddit(limit=30, sort=random.choice(["hot", "top", "new"]), target=mode)
+
+        else:
+            context.bot.send_message(chat_id=chat_id, text="❌ Comando non supportato.")
+            return
+
+        random.shuffle(results)  # ✅ mescola i risultati
+        sent = 0
+
+        for item in results:
+            if item['link'] in cache or is_banned(item['title'] + item['link']):
+                continue
+            send_media(context.bot, chat_id, item)
+            cache.add(item['link'])
+            sent += 1
+            if sent >= 10:
+                break
+
+        save_cache(mode, cache)
+
+        if sent == 0:
+            context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
+    except Exception as e:
+        print(f"[!] Errore send_content ({mode}): {e}")
+        context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
+
 
 def reset_cache(update: Update, context: CallbackContext):
     for mode in CACHE_FILES:
@@ -245,7 +259,6 @@ dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("new", cmd_new))
 dispatcher.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
 dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_content(u, c, "cosplay")))
-dispatcher.add_handler(CommandHandler("real", lambda u, c: send_content(u, c, "real")))
 dispatcher.add_handler(CommandHandler("reddit", lambda u, c: send_content(u, c, "reddit_all")))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("loopon", loop_on))
@@ -259,6 +272,7 @@ dispatcher.add_handler(CommandHandler("creampie", lambda u, c: send_content(u, c
 dispatcher.add_handler(CommandHandler("facial", lambda u, c: send_content(u, c, "facial")))
 dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "milf")))
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
+dispatcher.add_handler(CommandHandler("real", send_real))
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
