@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import random
 
 def fetch_nhentai(limit=10):
+    print(f"[DEBUG] fetch_nhentai chiamato con target = {target}")
     print("[+] Fetching from nhentai...")
     results = []
     page = random.randint(1, 25)
