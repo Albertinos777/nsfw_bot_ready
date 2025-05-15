@@ -3,16 +3,9 @@ import os
 import random
 from urllib.parse import urlparse
 
-# Host supportati da Telegram
-ALLOWED_HOSTS = [
-    'i.redd.it', 'i.imgur.com', 'cdn.discordapp.com',
-    'media.discordapp.net', 'media.giphy.com'
-]
+ALLOWED_HOSTS = ['i.redd.it', 'i.imgur.com', 'cdn.discordapp.com']
+ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm']
 
-# Estensioni supportate
-ALLOWED_EXTS = ['.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png']
-
-# Filtra URL inutilizzabili
 def is_valid_reddit_link(url):
     parsed = urlparse(url)
     if not any(url.endswith(ext) for ext in ALLOWED_EXTS):
@@ -23,9 +16,9 @@ def is_valid_reddit_link(url):
         return False
     return True
 
-def fetch_reddit(limit=15, sort="hot", target=None):
+def fetch_reddit(limit=10, sort="hot", target=None):
     if not target:
-        raise ValueError("Target subreddit is required.")
+        raise ValueError("Target is required")
 
     reddit = praw.Reddit(
         client_id=os.environ.get("REDDIT_CLIENT_ID"),
@@ -38,7 +31,7 @@ def fetch_reddit(limit=15, sort="hot", target=None):
 
     subreddits = {
         "cosplay": ["nsfwcosplay", "SexyCosplayGirls", "cosplaybabes"],
-        "reddit_all": ["GoneWild", "cumsluts", "Creampies", "NSFW_GIF", "RealGirls"],
+        "reddit_all": ["GoneWild", "cumsluts", "NSFW_GIF", "Creampies", "RealGirls"],
         "gif": ["NSFW_GIF", "porninfifteenseconds", "AssGifs", "boobbounce"],
         "creampie": ["Creampies", "analcreampie", "cumsluts", "pussycreampies"],
         "facial": ["facialcumsluts", "cumonher", "GirlsFinishingTheJob"],
@@ -51,30 +44,26 @@ def fetch_reddit(limit=15, sort="hot", target=None):
 
     for sub in chosen_subs:
         try:
-            sort_mode = random.choice(["hot", "top", "new"])
-            time_filter = random.choice(["day", "week", "month"])
-            posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
-
+            posts = reddit.subreddit(sub).top(time_filter="week", limit=limit * 2)
             for post in posts:
                 url = post.url.lower()
                 title = post.title.lower()
 
                 if not is_valid_reddit_link(url):
                     continue
-                if any(w in title for w in ['futanari', 'yaoi', 'gay', 'trap']):
+                if any(w in title for w in ['futanari', 'yaoi', 'trap', 'gay']):
                     continue
                 if post.over_18 and not post.is_self:
-                    ext = url.split('.')[-1]
                     results.append({
-                        "title": post.title,
-                        "link": url,
-                        "thumb": url,
-                        "ext": ext
+                        'title': post.title,
+                        'link': post.url,
+                        'thumb': post.url,
+                        'ext': url.split('.')[-1]
                     })
                     if len(results) >= limit:
                         break
         except Exception as e:
-            print(f"[!] Reddit error: {e}")
+            print(f"[!] Reddit error on {sub}: {e}")
             continue
 
     return results
