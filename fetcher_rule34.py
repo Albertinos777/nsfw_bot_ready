@@ -2,6 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 
 def fetch_rule34(limit=10):
+    print(f"[DEBUG] fetch_rule34 chiamato con target = {target}")
     print("[+] Fetching from rule34...")
     results = []
     try:
