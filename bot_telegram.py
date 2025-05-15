@@ -61,8 +61,13 @@ def is_banned(title_or_url):
 
 def send_real(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📡 Cerco video reali (HQPorner)...")
+    context.bot.send_message(chat_id, "📡 Cerco video reali...")
+
     results = fetch_hqporner(limit=10)
+
+    if not results:
+        results = fetch_reddit(limit=15, sort="top", target="reddit_all")
+
     cache = load_cache("real")
     sent = 0
 
