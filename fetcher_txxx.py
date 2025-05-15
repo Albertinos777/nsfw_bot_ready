@@ -10,41 +10,35 @@ def fetch_txxx(limit=10):
     try:
         r = requests.get(f"{base_url}/best/", headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
-        links = soup.select("div.thumb-inside a")
+        links = soup.select("div.thumb-inside a[href^='/videos/']")
 
         for a in links:
             if len(results) >= limit:
                 break
 
             href = a.get("href")
-            if not href or not href.startswith("/videos/"):
-                continue
-
             video_page = base_url + href
             vr = requests.get(video_page, headers=headers, timeout=10)
             vsoup = BeautifulSoup(vr.text, "html.parser")
-            title = vsoup.find("title").text.strip().replace(" - TXXX.COM", "")
-            video_tag = vsoup.find("video")
 
-            if not video_tag:
-                continue
+            title_tag = vsoup.find("title")
+            title = title_tag.text.strip().replace(" - TXXX.COM", "") if title_tag else "TXXX Video"
 
-            mp4 = video_tag.find("source", {"type": "video/mp4"})
+            video = vsoup.find("video")
+            source = video.find("source", type="video/mp4") if video else None
+            mp4 = source.get("src") if source else None
+
             if not mp4:
                 continue
 
-            mp4_url = mp4.get("src")
-            thumb_tag = vsoup.find("meta", {"property": "og:image"})
-            thumb = thumb_tag["content"] if thumb_tag else ""
-
-            if any(x in title.lower() for x in ['gay', 'yaoi', 'futanari', 'trap']):
+            if any(bad in title.lower() for bad in ['gay', 'yaoi', 'futanari']):
                 continue
 
             results.append({
-                "title": title,
-                "link": mp4_url,
-                "thumb": thumb,
-                "ext": "mp4"
+                'title': title,
+                'link': mp4,
+                'thumb': a.find("img")["src"] if a.find("img") else "",
+                'ext': 'mp4'
             })
 
     except Exception as e:
