@@ -1,8 +1,9 @@
 import praw
 import os
+import random
 
-def fetch_reddit(limit=10, sort="hot"):
-    print("[+] Fetching from Reddit...")
+def fetch_reddit(limit=10, sort="new", target="cosplay"):
+    print(f"[+] Fetching Reddit /{target}...")
     results = []
 
     try:
@@ -15,25 +16,38 @@ def fetch_reddit(limit=10, sort="hot"):
             check_for_async=False
         )
 
-        subreddits = [
-            "hentai", "nsfwcosplay", "rule34", "RealGirls", "NSFW_GIF",
-            "ecchi", "UncensoredHentai", "GoneWild", "cumsluts"
-        ]
+        # Subreddit diversi per tipo
+        subreddits = {
+            "cosplay": [
+                "nsfwcosplay", "cosplaygirls", "sexycosplay", "CosplayBoobs",
+                "CosplayButts", "cosplaybabes", "nsfwcosplaygw"
+            ],
+            "hentai": [
+                "hentai", "rule34", "ecchi", "UncensoredHentai", "Hentai_GIF"
+            ],
+            "real": [
+                "RealGirls", "NSFW_GIF", "GoneWild", "cumsluts", "Creampies"
+            ]
+        }
 
-        for sub in subreddits:
+        chosen_subs = subreddits.get(target, subreddits["cosplay"])
+        random.shuffle(chosen_subs)
+
+        for sub in chosen_subs:
             try:
                 posts = getattr(reddit.subreddit(sub), sort)(limit=limit * 2)
                 for post in posts:
                     title = post.title.lower()
                     url = post.url.lower()
-                    if any(word in title for word in ['futanari', 'yaoi', 'gay', 'trap']) or any(word in url for word in ['futanari', 'yaoi', 'gay', 'trap']):
+                    if any(w in title or w in url for w in ['futanari', 'yaoi', 'trap', 'gay']):
                         continue
                     if post.over_18 and not post.is_self:
-                        if any(ext in post.url.lower() for ext in ['.jpg', '.png', '.gif', '.mp4', '.webm']):
+                        if any(ext in post.url for ext in ['.jpg', '.png', '.gif', '.mp4', '.webm']):
                             results.append({
                                 'title': f"{sub} - {post.title[:100]}",
                                 'link': post.url,
-                                'thumb': post.url
+                                'thumb': post.url,
+                                'ext': post.url.split('.')[-1]
                             })
                             if len(results) >= limit:
                                 break
