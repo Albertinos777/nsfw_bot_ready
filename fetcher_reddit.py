@@ -28,13 +28,12 @@ def fetch_reddit(limit=10, sort="hot", target="cosplay"):
             ]
         }
 
-        chosen_subs = subreddits.get(target, [])
-        random.shuffle(chosen_subs)
+        chosen_subs = random.sample(subreddits.get(target, []), min(len(subreddits.get(target, [])), 5))
 
         for sub in chosen_subs:
             try:
-                subreddit = reddit.subreddit(sub)
-                posts = getattr(subreddit, sort)(limit=limit * 2)
+                sort_mode = random.choice(["hot", "new", "top"])
+                posts = getattr(reddit.subreddit(sub), sort_mode)(limit=limit * 2)
                 for post in posts:
                     title = post.title.lower()
                     url = post.url.lower()
