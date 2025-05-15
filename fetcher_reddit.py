@@ -28,7 +28,7 @@ def fetch_reddit(limit=30, sort="hot", target="reddit_all"):
         ],
         "gif": ["NSFW_GIF", "porninfifteenseconds", "HighResNSFW"],
         "creampie": ["Creampies", "AnalGW", "cumsluts"],
-        "facial": ["cumsluts", "facialcumshot", "Blowjobs"],
+        "facial": ["cumsluts", "Blowjobs"],
         "milf": ["milf", "GoneWild30Plus", "HotWives"],
         "ass": ["asstastic", "pawg", "BestBooties"]
     }
