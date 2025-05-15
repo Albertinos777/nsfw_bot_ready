@@ -72,7 +72,7 @@ def send_real(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     context.bot.send_message(chat_id, "📡 Cerco video reali da Reddit...")
 
-    results = fetch_reddit(limit=20, sort="top", target="reddit")
+    results = fetch_reddit(limit=20, sort="top", target="reddit_all")
     cache = load_cache("real")
     sent = 0
 
