@@ -9,8 +9,7 @@ from telegram.ext import Dispatcher, CommandHandler, CallbackContext
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
-from fetcher_spankbang import fetch_spankbang
-from fetcher_pornhub import fetch_pornhub
+from fetcher_hqporner import fetch_hqporner
 from fetcher_audio import fetch_audio
 
 TOKEN = os.environ.get("TOKEN")
