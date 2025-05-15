@@ -91,9 +91,9 @@ def send_real(update: Update, context: CallbackContext):
 
 def send_porno(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📡 Cerco video da HQPorner...")
+    context.bot.send_message(chat_id, "📡 Cerco video da SpankBang...")
 
-    results = fetch_hqporner(limit=10)
+    results = fetch_spankbang(limit=10)
     cache = load_cache("porno")
     sent = 0
 
@@ -108,7 +108,7 @@ def send_porno(update: Update, context: CallbackContext):
 
     save_cache("porno", cache)
     if sent == 0:
-        context.bot.send_message(chat_id=chat_id, text="❌ Nessun contenuto trovato su HQPorner.")
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun video trovato.")
 
 def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
@@ -118,14 +118,15 @@ def send_media(bot, chat_id, item):
     try:
         if ext in ['mp4', 'webm']:
             bot.send_video(chat_id=chat_id, video=link, caption=caption, timeout=30)
-        elif ext in ['gif']:
+        elif ext == 'gif':
             bot.send_animation(chat_id=chat_id, animation=link, caption=caption, timeout=30)
         elif ext in ['jpg', 'jpeg', 'png']:
             bot.send_photo(chat_id=chat_id, photo=link, caption=caption, timeout=30)
         else:
-            bot.send_document(chat_id=chat_id, document=link, caption=caption, timeout=30)
+            raise Exception("Formato non supportato")
     except Exception as e:
         print(f"[!] Errore nel caricamento media: {e}")
+        sys.stdout.flush()
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
 
 
@@ -310,7 +311,6 @@ dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "m
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
 dispatcher.add_handler(CommandHandler("real", send_real))
 dispatcher.add_handler(CommandHandler("porno", send_porno))
-
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
