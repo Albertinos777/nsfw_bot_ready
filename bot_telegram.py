@@ -59,6 +59,26 @@ def is_banned(title_or_url):
     banned = ['futanari', 'yaoi', 'gay', 'trap', 'dickgirl', 'gifv', 'svg', 'tiff']
     return any(bad in title_or_url.lower() for bad in banned)
 
+def send_real(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, "📡 Cerco video reali (HQPorner)...")
+    results = fetch_hqporner(limit=10)
+    cache = load_cache("real")
+    sent = 0
+
+    for item in results:
+        if item['link'] in cache or is_banned(item['title'] + item['link']):
+            continue
+        send_media(context.bot, chat_id, item)
+        cache.add(item['link'])
+        sent += 1
+        if sent >= 10:
+            break
+
+    save_cache("real", cache)
+    if sent == 0:
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun contenuto trovato.")
+
 def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
     link = item['link']
@@ -75,8 +95,8 @@ def send_media(bot, chat_id, item):
             bot.send_document(chat_id=chat_id, document=link, caption=caption, timeout=30)
     except Exception as e:
         print(f"[!] Errore media: {e}")
-        # fallback: solo link testuale
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+
 
 
 # --------------- HANDLERS ------------------
