@@ -3,7 +3,7 @@ import random
 import praw
 
 def is_valid_reddit_link(url):
-    return any(url.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"])
+    return url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm'))
 
 def fetch_reddit(limit=30, sort="hot", target="reddit_all"):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}")
@@ -19,17 +19,18 @@ def fetch_reddit(limit=30, sort="hot", target="reddit_all"):
     )
 
     subreddits = {
-        "cosplay": ["nsfwcosplay", "SexyCosplayGirls", "lewdcosplay", "cosplaybabes"],
+        "cosplay": [
+            "nsfwcosplay", "SexyCosplayGirls", "lewdcosplay", "cosplaybabes", "NSFWCostumes"
+        ],
         "reddit_all": [
             "NSFW_GIF", "GoneWild", "cumsluts", "Creampies", "PetiteGoneWild",
-            "AnalGW", "boobbounce", "NSFW_Snapchat", "realgirls", "NSFW_Porn_GIFs",
-            "Blowjobs", "HighResNSFW"
+            "AnalGW", "boobbounce", "NSFW_Snapchat", "realgirls", "Blowjobs"
         ],
-        "gif": ["NSFW_GIF", "porninfifteenseconds", "AssGifs"],
+        "gif": ["NSFW_GIF", "porninfifteenseconds", "HighResNSFW"],
         "creampie": ["Creampies", "AnalGW", "cumsluts"],
         "facial": ["cumsluts", "facialcumshot", "Blowjobs"],
         "milf": ["milf", "GoneWild30Plus", "HotWives"],
-        "ass": ["AssGifs", "asstastic", "pawg"]
+        "ass": ["asstastic", "pawg", "BestBooties"]
     }
 
     sources = subreddits.get(target, [])
@@ -37,30 +38,27 @@ def fetch_reddit(limit=30, sort="hot", target="reddit_all"):
 
     for sub in sources:
         try:
-            for _ in range(3):  # 3 cicli per sort e time
-                sort_mode = random.choice(["hot", "new", "top"])
-                time_filter = random.choice(["day", "week", "month"])
-                posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit*2)
+            subreddit = reddit.subreddit(sub)
+            posts = subreddit.top(time_filter=random.choice(["day", "week", "month", "year", "all"]), limit=limit * 3)
 
-                for post in posts:
-                    url = post.url.lower()
-                    title = post.title.lower()
+            for post in posts:
+                url = post.url.lower()
+                title = post.title.lower()
 
-                    if not is_valid_reddit_link(url):
-                        continue
-                    if any(bad in title for bad in ['futanari', 'yaoi', 'trap', 'gay']):
-                        continue
-                    if post.over_18 and not post.is_self:
-                        results.append({
-                            'title': post.title,
-                            'link': post.url,
-                            'thumb': post.url,
-                            'ext': post.url.split('.')[-1]
-                        })
+                if not is_valid_reddit_link(url):
+                    continue
+                if any(x in title for x in ['futanari', 'yaoi', 'trap', 'gay']):
+                    continue
+                if post.over_18 and not post.is_self:
+                    results.append({
+                        'title': post.title,
+                        'link': post.url,
+                        'thumb': post.url,
+                        'ext': post.url.split('.')[-1]
+                    })
 
-                    if len(results) >= limit:
-                        return results
-
+                if len(results) >= limit:
+                    return results
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
             continue
