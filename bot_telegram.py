@@ -173,8 +173,9 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
 
     except Exception as e:
-        print(f"[!] Errore send_content ({mode}): {e}")
-        context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
+        import traceback
+        print(f"\n[!] Errore in send_content({mode}):\n{traceback.format_exc()}\n")
+        context.bot.send_message(chat_id=chat_id, text=f"⚠️ Errore nel caricamento contenuti.")
 
 
 def reset_cache(update: Update, context: CallbackContext):
