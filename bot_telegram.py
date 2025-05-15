@@ -13,6 +13,7 @@ from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
 from fetcher_hqporner import fetch_hqporner
 from fetcher_audio import fetch_audio
+from fetcher_toonily import fetch_toonily
 
 TOKEN = os.environ.get("TOKEN")
 print(f"[DEBUG] TOKEN ENV: {TOKEN}")
@@ -32,7 +33,8 @@ CACHE_FILES = {
     "creampie": "cache_creampie.json",
     "facial": "cache_facial.json",
     "milf": "cache_milf.json",
-    "ass": "cache_ass.json"
+    "ass": "cache_ass.json",
+    "manhwa": "cache_manhwa.json"
 }
 
 FAV_FILE = "favorites.json"
@@ -128,6 +130,27 @@ def send_media(bot, chat_id, item):
         print(f"[!] Errore nel caricamento media: {e}")
         sys.stdout.flush()
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+
+def send_manhwa(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, "📖 Cerco Manhwa/Webtoon erotici...")
+
+    results = fetch_toonily(limit=10)
+    cache = load_cache("manhwa")
+    sent = 0
+
+    for item in results:
+        if item['link'] in cache or is_banned(item['title'] + item['link']):
+            continue
+        send_media(context.bot, chat_id, item)
+        cache.add(item['link'])
+        sent += 1
+        if sent >= 10:
+            break
+
+    save_cache("manhwa", cache)
+    if sent == 0:
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun nuovo manhwa trovato.")
 
 
 # --------------- HANDLERS ------------------
@@ -311,6 +334,7 @@ dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "m
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
 dispatcher.add_handler(CommandHandler("real", send_real))
 dispatcher.add_handler(CommandHandler("porno", send_porno))
+dispatcher.add_handler(CommandHandler("manhwa", send_manhwa))
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
