@@ -2,31 +2,43 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_spankbang(limit=10):
-    print("[+] Fetching from SpankBang...")
+    print(f"[DEBUG] fetch_spankbang() chiamato (limit={limit})")
     results = []
-    try:
-        url = "https://spankbang.com/s/creampie+facial+cosplay"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        videos = soup.select("div.video_item")
+    base = "https://spankbang.party"
 
-        for vid in videos[:limit * 2]:
-            try:
-                title = vid.select_one(".video_title").text.strip()
-                link = "https://spankbang.com" + vid.select_one("a")["href"]
-                thumb = vid.select_one("img")["src"]
-                if any(w in title.lower() for w in ['gay', 'yaoi', 'trap']):
-                    continue
-                results.append({
-                    "title": title,
-                    "link": link,
-                    "thumb": thumb
-                })
-                if len(results) >= limit:
-                    break
-            except:
+    try:
+        r = requests.get(f"{base}/videos?o=trending", timeout=10, headers={
+            "User-Agent": "Mozilla/5.0"
+        })
+        soup = BeautifulSoup(r.text, "html.parser")
+        thumbs = soup.select("div.video-item")
+
+        for video in thumbs:
+            if len(results) >= limit:
+                break
+
+            a = video.find("a", href=True)
+            img = video.find("img")
+
+            if not a or not img:
                 continue
+
+            vid_link = base + a["href"]
+            thumb = img["src"]
+            title = img.get("alt", "SpankBang")
+
+            if any(x in title.lower() for x in ['gay', 'futanari', 'trap']):
+                continue
+
+            results.append({
+                "title": title,
+                "link": vid_link,
+                "thumb": thumb,
+                "ext": "mp4"  # assume mp4 for preview
+            })
+
     except Exception as e:
-        print(f"[!] SpankBang error: {e}")
+        print(f"[!] Errore fetch_spankbang: {e}")
+
+    print(f"[DEBUG] SpankBang trovati: {len(results)}")
     return results
