@@ -131,7 +131,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non supportato.")
             return
 
-        random.shuffle(results)  # ✅ mescola i risultati
+        random.shuffle(results)
         sent = 0
 
         for item in results:
@@ -147,6 +147,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
 
         if sent == 0:
             context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
+
     except Exception as e:
         print(f"[!] Errore send_content ({mode}): {e}")
         context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
@@ -168,10 +169,15 @@ def start(update: Update, context: CallbackContext):
 
 
 def cmd_new(update: Update, context: CallbackContext):
-    send_content(update, context, "hentai")
-    send_content(update, context, "cosplay")
-    send_content(update, context, "real")
-    send_content(update, context, "reddit_all")
+    context.bot.send_message(update.effective_chat.id, "🎁 Ecco una selezione mista per te...")
+
+    for mode in ["hentai", "cosplay", "real", "reddit_all", "gif", "creampie", "facial", "milf", "ass"]:
+        try:
+            send_content(update, context, mode)
+            time.sleep(1)  # leggera pausa per non far crashare Telegram
+        except Exception as e:
+            print(f"[!] Errore in /new per {mode}: {e}")
+
 
 def send_audio(update: Update, context: CallbackContext):
     results = fetch_audio(limit=3)
