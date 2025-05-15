@@ -1,38 +1,37 @@
 import requests
 from bs4 import BeautifulSoup
+import random
 
-def fetch_xvideos(limit=5):
+def fetch_xvideos(limit=10):
     print("[+] Fetching from XVideos...")
+    base_url = "https://www.xvideos.com"
+    tags = ["creampie", "facial", "cosplay", "blowjob", "amateur"]
     results = []
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-    url = "https://www.xvideos.com/channels/hentai"
-    r = requests.get(url, headers=headers)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    blocks = soup.select('.thumb-block')
 
-    for block in blocks:
-        if len(results) >= limit:
-            break
-        a_tag = block.select_one('a')
-        title_tag = block.select_one('.title')
-        img_tag = block.select_one('img')
+    try:
+        tag = random.choice(tags)
+        url = f"{base_url}/tags/{tag}"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        videos = soup.select("div.thumb-block")
 
-        if a_tag and title_tag:
-            title = title_tag.text.strip()
-            link = "https://www.xvideos.com" + a_tag['href']
-            thumb = img_tag.get('data-src') if img_tag and img_tag.has_attr('data-src') else (img_tag.get('src') if img_tag else "")
-
-            # Skip futanari/yaoi come da filtro
-            if "futanari" in title.lower() or "yaoi" in title.lower():
+        for vid in videos:
+            if len(results) >= limit:
+                break
+            try:
+                link = base_url + vid.select_one("a")["href"]
+                title = vid.select_one(".title").text.strip()
+                thumb = vid.select_one("img")["data-src"]
+                if any(bad in title.lower() for bad in ['futanari', 'yaoi', 'gay', 'trap']):
+                    continue
+                results.append({
+                    "title": title,
+                    "link": link,
+                    "thumb": thumb
+                })
+            except:
                 continue
-
-            # Aggiungi immagine solo se disponibile
-            results.append({
-                'title': title,
-                'link': link,
-                'thumb': thumb if thumb else "https://img.icons8.com/color/200/no-image.png"
-            })
-
+    except Exception as e:
+        print(f"[!] XVideos error: {e}")
     return results
