@@ -129,6 +129,7 @@ def send_media(bot, chat_id, item):
 # --------------- HANDLERS ------------------
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
+    print(f"[DEBUG] Entrato in send_content() con mode = {mode}")
     chat_id = update.effective_chat.id
     context.bot.send_message(chat_id, f"📡 Cerco contenuti per /{mode}...")
 
