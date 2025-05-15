@@ -20,7 +20,7 @@ def fetch_reddit(limit=30, sort="hot", target="reddit_all"):
 
     subreddits = {
         "cosplay": [
-            "nsfwcosplay", "SexyCosplayGirls", "lewdcosplay", "cosplaybabes", "NSFWCostumes"
+            "nsfwcosplay", "lewdcosplay", "cosplaybabes", "NSFWCostumes"
         ],
         "reddit_all": [
             "NSFW_GIF", "GoneWild", "cumsluts", "Creampies", "PetiteGoneWild",
