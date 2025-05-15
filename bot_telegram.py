@@ -317,6 +317,7 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
+    print("[DEBUG] Richiesta GET ricevuta sulla /")
     return "NSFW Bot attivo."
 
 if __name__ == "__main__":
