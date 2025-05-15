@@ -300,50 +300,38 @@ def random_tag(update: Update, context: CallbackContext):
 
 def loop_worker(chat_id):
     print(f"[DEBUG] loop_worker avviato per {chat_id}")
-    while True:
-        if not loop_enabled.get(chat_id, False):
-            print(f"[DEBUG] loop disattivato per {chat_id}, termino thread.")
-            break
-
+    while loop_enabled.get(chat_id, False):
         for mode in ["hentai", "cosplay", "real", "reddit_all"]:
             if not loop_enabled.get(chat_id, False):
-                break  # uscita immediata
-
+                print(f"[DEBUG] loop interrotto manualmente per {chat_id}")
+                return
             try:
-                cache = load_cache(mode)
-                results = []
-                if mode == "hentai":
-                    results += fetch_nhentai(limit=5)
-                    results += fetch_rule34(limit=5)
-                elif mode == "cosplay":
-                    results += fetch_reddit(limit=5, sort="new", target="cosplay")
-                elif mode == "real":
-                    results += fetch_reddit(limit=5, sort="hot", target="reddit_all")
-                elif mode == "reddit_all":
-                    results += fetch_reddit(limit=5, sort="top", target="reddit_all")
-
-                for item in results:
-                    if item['link'] in cache or is_banned(item['title'] + item['link']):
-                        continue
-                    send_media(bot, chat_id, item)
-                    cache.add(item['link'])
-                    save_cache(mode, cache)
-                    break
-
+                # fetch and send logic
+                pass
             except Exception as e:
                 print(f"[!] Loop error: {e}")
-
-        print(f"[DEBUG] ciclo loop completato per {chat_id}, attesa 1 ora")
         time.sleep(3600)
 
+    print(f"[DEBUG] loop terminato per {chat_id}")
+
+def loop_status(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    status = loop_enabled.get(chat_id, False)
+    update.message.reply_text(f"📡 Loop attivo: {'✅ Sì' if status else '❌ No'}")
 
 
 
 def loop_on(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
+
+    if loop_enabled.get(chat_id, False):
+        update.message.reply_text("⚠️ Il loop è già attivo.")
+        return
+
     loop_enabled[chat_id] = True
     update.message.reply_text("🔁 Loop automatico attivato.")
     threading.Thread(target=loop_worker, args=(chat_id,), daemon=True).start()
+
 
 def loop_off(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -372,6 +360,7 @@ dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "as
 dispatcher.add_handler(CommandHandler("real", send_real))
 dispatcher.add_handler(CommandHandler("porno", lambda u, c: send_content(u, c, "porno")))
 dispatcher.add_handler(CommandHandler("manhwa", lambda u, c: send_content(u, c, "manhwa")))
+dispatcher.add_handler(CommandHandler("loopstatus", loop_status))
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
