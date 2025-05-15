@@ -340,8 +340,8 @@ dispatcher.add_handler(CommandHandler("facial", lambda u, c: send_content(u, c, 
 dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "milf")))
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
 dispatcher.add_handler(CommandHandler("real", send_real))
-dispatcher.add_handler(CommandHandler("porno", send_porno))
-dispatcher.add_handler(CommandHandler("manhwa", send_manhwa))
+dispatcher.add_handler(CommandHandler("porno", lambda u, c: send_content(u, c, "porno")))
+dispatcher.add_handler(CommandHandler("manhwa", lambda u, c: send_content(u, c, "manhwa")))
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
