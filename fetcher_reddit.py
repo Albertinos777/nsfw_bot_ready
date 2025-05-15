@@ -1,6 +1,20 @@
 import praw
 import os
 import random
+from urllib.parse import urlparse
+
+ALLOWED_HOSTS = ['i.redd.it', 'i.imgur.com', 'cdn.discordapp.com']
+ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm']
+
+def is_valid_reddit_link(url):
+    parsed = urlparse(url)
+    if not any(url.endswith(ext) for ext in ALLOWED_EXTS):
+        return False
+    if not any(host in parsed.netloc for host in ALLOWED_HOSTS):
+        return False
+    if 'v.redd.it' in url or 'redgifs.com' in url:
+        return False
+    return True
 
 def fetch_reddit(limit=10, sort="hot", target="cosplay"):
     print(f"[+] Fetching Reddit ({target})...")
@@ -33,22 +47,25 @@ def fetch_reddit(limit=10, sort="hot", target="cosplay"):
         for sub in chosen_subs:
             try:
                 sort_mode = random.choice(["hot", "new", "top"])
-                posts = getattr(reddit.subreddit(sub), sort_mode)(limit=limit * 2)
+                time_filter = random.choice(["day", "week", "month"])
+                posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
                 for post in posts:
-                    title = post.title.lower()
                     url = post.url.lower()
-                    if any(w in title + url for w in ['futanari', 'yaoi', 'trap', 'gay', 'svg', 'gifv', 'tiff']):
+                    title = post.title.lower()
+
+                    if not is_valid_reddit_link(url):
+                        continue
+                    if any(w in title for w in ['futanari', 'yaoi', 'trap', 'gay', 'dickgirl']):
                         continue
                     if post.over_18 and not post.is_self:
-                        if any(ext in url for ext in ['.jpg', '.png', '.gif', '.mp4', '.webm']):
-                            results.append({
-                                'title': post.title,
-                                'link': post.url,
-                                'thumb': post.url,
-                                'ext': post.url.split('.')[-1]
-                            })
-                            if len(results) >= limit:
-                                break
+                        results.append({
+                            'title': post.title,
+                            'link': post.url,
+                            'thumb': post.url,
+                            'ext': post.url.split('.')[-1]
+                        })
+                        if len(results) >= limit:
+                            break
             except Exception as e:
                 print(f"[!] Reddit error {sub}: {e}")
                 continue
