@@ -167,7 +167,6 @@ def send_manhwa(update: Update, context: CallbackContext):
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
     print(f"[DEBUG] Entrato in send_content() con mode = {mode}")
-    sys.stdout.flush()
     chat_id = update.effective_chat.id
     context.bot.send_message(chat_id, f"📡 Cerco contenuti per /{mode}...")
 
@@ -178,18 +177,16 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         if mode == "hentai":
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
-
         elif mode == "cosplay":
             results += fetch_reddit(limit=30, sort="new", target="cosplay")
-
         elif mode == "real":
             results += fetch_reddit(limit=20, sort="hot", target="reddit_all")
-            if not results:
-                results += fetch_reddit(limit=20, sort="top", target="reddit_all")
-
         elif mode in ["reddit_all", "gif", "creampie", "facial", "milf", "ass"]:
             results += fetch_reddit(limit=30, sort=random.choice(["hot", "top", "new"]), target=mode)
-
+        elif mode == "porno":
+            results += fetch_txxx(limit=10)
+        elif mode == "manhwa":
+            results += fetch_manytoon(limit=10)
         else:
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non supportato.")
             return
@@ -214,7 +211,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     except Exception as e:
         import traceback
         print(f"\n[!] Errore in send_content({mode}):\n{traceback.format_exc()}\n")
-        context.bot.send_message(chat_id=chat_id, text=f"⚠️ Errore nel caricamento contenuti.")
+        context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
 
 
 def reset_cache(update: Update, context: CallbackContext):
