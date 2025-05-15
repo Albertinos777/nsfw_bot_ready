@@ -311,7 +311,6 @@ dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "m
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
 dispatcher.add_handler(CommandHandler("real", send_real))
 dispatcher.add_handler(CommandHandler("porno", send_porno))
-dispatcher.add_handler(CommandHandler("hq", send_hqporner))
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
