@@ -288,9 +288,8 @@ def loop_worker(chat_id):
     while loop_enabled.get(chat_id, False):
         for mode in ["hentai", "cosplay", "real", "reddit_all"]:
             if not loop_enabled.get(chat_id, False):
-                print(f"[DEBUG] loop_worker() interrotto per {chat_id}")
-                return  # Uscita dal loop se disattivato a metà ciclo
-
+                print(f"[DEBUG] Loop interrotto manualmente per {chat_id}")
+                return
             try:
                 cache = load_cache(mode)
                 results = []
@@ -300,10 +299,9 @@ def loop_worker(chat_id):
                 elif mode == "cosplay":
                     results += fetch_reddit(limit=5, sort="new", target="cosplay")
                 elif mode == "real":
-                    results += fetch_reddit(limit=5, sort="top", target="reddit_all")
-                elif mode == "reddit_all":
                     results += fetch_reddit(limit=5, sort="hot", target="reddit_all")
-
+                elif mode == "reddit_all":
+                    results += fetch_reddit(limit=5, sort="top", target="reddit_all")
                 for item in results:
                     if item['link'] in cache or is_banned(item['title'] + item['link']):
                         continue
@@ -314,6 +312,7 @@ def loop_worker(chat_id):
             except Exception as e:
                 print(f"[!] Loop error: {e}")
         time.sleep(3600)
+
 
 
 def loop_on(update: Update, context: CallbackContext):
