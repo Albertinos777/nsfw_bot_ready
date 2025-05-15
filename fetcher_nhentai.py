@@ -5,8 +5,9 @@ import random
 def fetch_nhentai(limit=10):
     print("[+] Fetching from nhentai...")
     results = []
-    page = random.randint(1, 25)
+    page = random.randint(1, 20)
     url = f"https://nhentai.net/?page={page}"
+
     r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
     soup = BeautifulSoup(r.text, 'html.parser')
     gallery_items = soup.select('.gallery')
@@ -17,19 +18,16 @@ def fetch_nhentai(limit=10):
         try:
             title = item.select_one('.caption').text.strip()
             link = "https://nhentai.net" + item.select_one('a')['href']
-            img_tag = item.select_one('img')
-            cover = img_tag['data-src'] if img_tag.has_attr('data-src') else img_tag['src']
-            title_lower = title.lower()
+            img = item.select_one('img')
+            thumb = img['data-src'] if img.has_attr('data-src') else img['src']
 
-            if any(x in title_lower for x in ['futanari', 'yaoi']):
-                continue
-            if 'full color' not in title_lower:
+            if any(tag in title.lower() for tag in ['futanari', 'yaoi']) or 'full color' not in title.lower():
                 continue
 
             results.append({
                 'title': title,
                 'link': link,
-                'thumb': cover
+                'thumb': thumb
             })
         except:
             continue
