@@ -2,47 +2,36 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_nhentai(limit=10):
-    print(f"[DEBUG] fetch_nhentai() chiamato (limit={limit})")
+    print(f"[DEBUG] fetch_nhentai() limit={limit}")
     results = []
     page = 1
 
     while len(results) < limit and page <= 10:
-        url = f"https://nhentai.net/?page={page}"
-        r = requests.get(url)
+        r = requests.get(f"https://nhentai.net/?page={page}")
         soup = BeautifulSoup(r.text, 'html.parser')
-        gallery_items = soup.select('.gallery')
+        gallery = soup.select('.gallery')
 
-        for item in gallery_items:
+        for item in gallery:
             if len(results) >= limit:
                 break
 
-            title_tag = item.select_one('.caption')
-            link_tag = item.select_one('a')
-            img_tag = item.select_one('img')
-
-            if not (title_tag and link_tag and img_tag):
+            title = item.select_one('.caption').text.strip()
+            if any(x in title.lower() for x in ['futanari', 'yaoi', 'trap', 'gay']):
                 continue
 
-            title = title_tag.text.strip()
-            link = "https://nhentai.net" + link_tag['href']
-            cover = img_tag.get('data-src') or img_tag.get('src')
-
-            # Filtro
-            if any(bad in title.lower() for bad in ['futanari', 'yaoi', 'gay']):
-                continue
-
-            # Se non è a colori
-            if 'full color' not in title.lower():
+            a = item.find("a", href=True)
+            img = item.find("img")
+            if not a or not img:
                 continue
 
             results.append({
                 'title': title,
-                'link': link,
-                'thumb': cover,
-                'ext': cover.split('.')[-1]
+                'link': "https://nhentai.net" + a['href'],
+                'thumb': img.get("data-src") or img.get("src"),
+                'ext': 'jpg'
             })
 
         page += 1
 
-    print(f"[DEBUG] fetch_nhentai ha trovato {len(results)} risultati")
+    print(f"[DEBUG] fetch_nhentai found {len(results)}")
     return results
