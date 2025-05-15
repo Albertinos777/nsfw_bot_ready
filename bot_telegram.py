@@ -7,13 +7,13 @@ import sys
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, CallbackContext
-from fetcher_spankbang import fetch_spankbang
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
-from fetcher_hqporner import fetch_hqporner
 from fetcher_audio import fetch_audio
-from fetcher_toonily import fetch_toonily
+from fetcher_txxx import fetch_txxx
+from fetcher_manytoon import fetch_manytoon
+
 
 TOKEN = os.environ.get("TOKEN")
 print(f"[DEBUG] TOKEN ENV: {TOKEN}")
@@ -34,7 +34,9 @@ CACHE_FILES = {
     "facial": "cache_facial.json",
     "milf": "cache_milf.json",
     "ass": "cache_ass.json",
-    "manhwa": "cache_manhwa.json"
+    "manhwa": "cache_manhwa.json",
+    "txxx": "cache_txxx.json",
+    "manytoon": "cache_manytoon.json"
 }
 
 FAV_FILE = "favorites.json"
@@ -93,10 +95,10 @@ def send_real(update: Update, context: CallbackContext):
 
 def send_porno(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📡 Cerco video da SpankBang...")
+    context.bot.send_message(chat_id, "📡 Cerco video da TXXX...")
 
-    results = fetch_spankbang(limit=10)
-    cache = load_cache("porno")
+    results = fetch_txxx(limit=10)
+    cache = load_cache("txxx")
     sent = 0
 
     for item in results:
@@ -108,7 +110,7 @@ def send_porno(update: Update, context: CallbackContext):
         if sent >= 10:
             break
 
-    save_cache("porno", cache)
+    save_cache("txxx", cache)
     if sent == 0:
         context.bot.send_message(chat_id=chat_id, text="❌ Nessun video trovato.")
 
@@ -133,10 +135,10 @@ def send_media(bot, chat_id, item):
 
 def send_manhwa(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📖 Cerco Manhwa/Webtoon erotici...")
+    context.bot.send_message(chat_id, "📖 Cerco Manhwa erotici...")
 
-    results = fetch_toonily(limit=10)
-    cache = load_cache("manhwa")
+    results = fetch_manytoon(limit=10)
+    cache = load_cache("manytoon")
     sent = 0
 
     for item in results:
@@ -148,9 +150,9 @@ def send_manhwa(update: Update, context: CallbackContext):
         if sent >= 10:
             break
 
-    save_cache("manhwa", cache)
+    save_cache("manytoon", cache)
     if sent == 0:
-        context.bot.send_message(chat_id=chat_id, text="❌ Nessun nuovo manhwa trovato.")
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun manhwa trovato.")
 
 
 # --------------- HANDLERS ------------------
