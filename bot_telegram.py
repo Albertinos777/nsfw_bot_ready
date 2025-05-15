@@ -13,7 +13,8 @@ from fetcher_reddit import fetch_reddit
 from fetcher_audio import fetch_audio
 from fetcher_txxx import fetch_txxx
 from fetcher_manytoon import fetch_manytoon
-
+from fetcher_hqporner import fetch_hqporner
+from fetcher_manhwa import fetch_manhwa
 
 TOKEN = os.environ.get("TOKEN")
 print(f"[DEBUG] TOKEN ENV: {TOKEN}")
@@ -184,9 +185,9 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         elif mode in ["reddit_all", "gif", "creampie", "facial", "milf", "ass"]:
             results += fetch_reddit(limit=30, sort=random.choice(["hot", "top", "new"]), target=mode)
         elif mode == "porno":
-            results += fetch_txxx(limit=10)
+            results += fetch_hqporner(limit=10)
         elif mode == "manhwa":
-            results += fetch_manytoon(limit=10)
+            results += fetch_manhwa(limit=10)
         else:
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non supportato.")
             return
