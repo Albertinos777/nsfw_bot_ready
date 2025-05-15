@@ -2,6 +2,8 @@ import os
 import json
 import threading
 import time
+import random
+import sys
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, CallbackContext
@@ -131,6 +133,7 @@ def send_media(bot, chat_id, item):
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
     print(f"[DEBUG] Entrato in send_content() con mode = {mode}")
+    sys.stdout.flush()
     chat_id = update.effective_chat.id
     context.bot.send_message(chat_id, f"📡 Cerco contenuti per /{mode}...")
 
@@ -313,6 +316,7 @@ dispatcher.add_handler(CommandHandler("porno", send_porno))
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     print("[DEBUG] Ricevuto POST da Telegram!")
+    sys.stdout.flush()
     update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     return "OK"
@@ -320,6 +324,7 @@ def webhook():
 @app.route("/", methods=["GET"])
 def index():
     print("[DEBUG] Richiesta GET ricevuta sulla /")
+    sys.stdout.flush()
     return "NSFW Bot attivo."
 
 if __name__ == "__main__":
