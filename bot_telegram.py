@@ -23,6 +23,7 @@ CACHE_FILES = {
     "hentai": "cache_hentai.json",
     "cosplay": "cache_cosplay.json",
     "real": "cache_real.json",
+    "porno": "cache_porno.json",
     "reddit_all": "cache_reddit.json",
     "gif": "cache_gif.json",
     "creampie": "cache_creampie.json",
@@ -66,12 +67,9 @@ def is_banned(title_or_url):
 
 def send_real(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id, "📡 Cerco video reali (HQPorner o Reddit)...")
+    context.bot.send_message(chat_id, "📡 Cerco video reali da Reddit...")
 
-    results = fetch_hqporner(limit=10)
-    if not results:
-        results = fetch_reddit(limit=15, sort="top", target="reddit_all")
-
+    results = fetch_reddit(limit=20, sort="top", target="reddit_all")
     cache = load_cache("real")
     sent = 0
 
@@ -86,7 +84,28 @@ def send_real(update: Update, context: CallbackContext):
 
     save_cache("real", cache)
     if sent == 0:
-        context.bot.send_message(chat_id=chat_id, text="❌ Nessun contenuto trovato.")
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun contenuto trovato su Reddit.")
+
+def send_porno(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, "📡 Cerco video da HQPorner...")
+
+    results = fetch_hqporner(limit=10)
+    cache = load_cache("porno")
+    sent = 0
+
+    for item in results:
+        if item['link'] in cache or is_banned(item['title'] + item['link']):
+            continue
+        send_media(context.bot, chat_id, item)
+        cache.add(item['link'])
+        sent += 1
+        if sent >= 10:
+            break
+
+    save_cache("porno", cache)
+    if sent == 0:
+        context.bot.send_message(chat_id=chat_id, text="❌ Nessun contenuto trovato su HQPorner.")
 
 def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
@@ -167,8 +186,8 @@ def reset_cache(update: Update, context: CallbackContext):
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Benvenuto! Comandi disponibili:\n"
-        "/new\n/hentai\n/cosplay\n/real\n/reddit\n/audio\n"
-        "/gif\n/creampie\n/facial\n/milf\n/ass\n"
+        "/new\n/hentai\n/cosplay\n/real (da Reddit)\n/porno (da HQPorner)\n"
+        "/reddit\n/audio\n/gif\n/creampie\n/facial\n/milf\n/ass\n"
         "/loopon\n/loopoff\n/resetcache\n/fav <link>\n/favorites\n/random <tag>"
     )
 
@@ -284,6 +303,8 @@ dispatcher.add_handler(CommandHandler("facial", lambda u, c: send_content(u, c, 
 dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "milf")))
 dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
 dispatcher.add_handler(CommandHandler("real", send_real))
+dispatcher.add_handler(CommandHandler("porno", send_porno))
+
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
