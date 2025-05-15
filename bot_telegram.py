@@ -23,7 +23,12 @@ CACHE_FILES = {
     "hentai": "cache_hentai.json",
     "cosplay": "cache_cosplay.json",
     "real": "cache_real.json",
-    "reddit_all": "cache_reddit.json"
+    "reddit_all": "cache_reddit.json",
+    "gif": "cache_gif.json",
+    "creampie": "cache_creampie.json",
+    "facial": "cache_facial.json",
+    "milf": "cache_milf.json",
+    "ass": "cache_ass.json"
 }
 
 FAV_FILE = "favorites.json"
