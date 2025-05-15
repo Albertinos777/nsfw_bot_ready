@@ -7,7 +7,11 @@ def fetch_rule34(limit=20):
 
     try:
         r = requests.get(f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit={limit*2}", timeout=10)
-        root = ElementTree.fromstring(r.content)
+        try:
+            root = ElementTree.fromstring(r.content)
+        except ElementTree.ParseError:
+            print("[!] rule34: XML non valido")
+            return []
 
         for child in root:
             file_url = child.attrib.get("file_url")
