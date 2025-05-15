@@ -10,7 +10,7 @@ def fetch_rule34(limit=20):
         try:
             root = ElementTree.fromstring(r.content)
         except ElementTree.ParseError:
-            print("[!] rule34: XML non valido")
+            print("[!] rule34: XML non valido, saltato")
             return []
 
         for child in root:
