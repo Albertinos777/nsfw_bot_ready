@@ -12,13 +12,15 @@ def fetch_pornhub(limit=10):
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, 'html.parser')
-        blocks = soup.select("div.videoPreviewBg")
+        blocks = soup.select("li.videoBox")
 
-        for vid in blocks[:limit]:
+        for block in blocks[:limit * 2]:
             try:
-                title = vid['data-title']
-                link = "https://www.pornhub.com" + vid['data-video-url']
-                thumb = vid.select_one("img")['src']
+                a_tag = block.find("a", class_="js-video-title")
+                if not a_tag: continue
+                title = a_tag.get("title")
+                link = "https://www.pornhub.com" + a_tag.get("href")
+                thumb = block.find("img")["data-thumb_url"]
                 if any(w in title.lower() for w in ['gay', 'yaoi', 'trap']):
                     continue
                 results.append({
@@ -26,6 +28,8 @@ def fetch_pornhub(limit=10):
                     "link": link,
                     "thumb": thumb
                 })
+                if len(results) >= limit:
+                    break
             except:
                 continue
     except Exception as e:
