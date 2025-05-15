@@ -175,7 +175,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_reddit(limit=30, sort="new", target="cosplay")
 
         elif mode == "real":
-            results += fetch_hqporner(limit=15)
+            results += fetch_reddit(limit=20, sort="hot", target="reddit_all")
             if not results:
                 results += fetch_reddit(limit=20, sort="top", target="reddit_all")
 
