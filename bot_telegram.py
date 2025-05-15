@@ -195,7 +195,7 @@ def start(update: Update, context: CallbackContext):
 def cmd_new(update: Update, context: CallbackContext):
     context.bot.send_message(update.effective_chat.id, "🎁 Ecco una selezione mista per te...")
 
-    for mode in ["hentai", "cosplay", "real", "reddit_all", "gif", "creampie", "facial", "milf", "ass"]:
+    for mode in ["hentai", "cosplay", "real", "reddit_all", "gif", "creampie", "facial", "milf", "ass", "porno"]:
         try:
             send_content(update, context, mode)
             time.sleep(1)  # leggera pausa per non far crashare Telegram
