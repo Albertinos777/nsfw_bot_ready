@@ -1,21 +1,22 @@
 import requests
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 def fetch_rule34(limit=10):
     print("[+] Fetching from rule34...")
     results = []
     try:
-        url = f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit={limit}&tags=rating:explicit"
-        r = requests.get(url, timeout=10)
-        root = ElementTree.fromstring(r.content)
-        for child in root:
-            tags = child.attrib.get('tags', '')
-            if 'file_url' in child.attrib and not any(tag in tags for tag in ['futanari', 'yaoi', 'gay', 'trap']):
+        r = requests.get(f"https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit={limit}&tags=rating:explicit")
+        root = ET.fromstring(r.content)
+
+        for post in root.findall("post"):
+            file_url = post.attrib.get("file_url", "")
+            if any(ext in file_url for ext in [".webm", ".mp4", ".gif", ".jpg", ".png"]):
                 results.append({
-                    'title': tags[:100],
-                    'link': child.attrib['file_url'],
-                    'thumb': child.attrib['file_url']
+                    "title": post.attrib.get("tags", "")[:80],
+                    "link": file_url,
+                    "thumb": file_url,
+                    "ext": file_url.split(".")[-1]
                 })
     except Exception as e:
-        print(f"[!] Errore Rule34: {e}")
+        print(f"[!] rule34 error: {e}")
     return results
