@@ -17,6 +17,7 @@ def is_valid_reddit_link(url):
     return True
 
 def fetch_reddit(limit=10, sort="hot", target=None):
+    print(f"[DEBUG] fetch_reddit chiamato con target = {target}")
     if not target:
         raise ValueError("Target is required")
 
