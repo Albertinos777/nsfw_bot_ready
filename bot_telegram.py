@@ -36,8 +36,7 @@ CACHE_FILES = {
     "milf": "cache_milf.json",
     "ass": "cache_ass.json",
     "manhwa": "cache_manhwa.json",
-    "txxx": "cache_txxx.json",
-    "manytoon": "cache_manytoon.json"
+    "hqporner": "cache_porno.json",
 }
 
 FAV_FILE = "favorites.json"
