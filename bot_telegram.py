@@ -78,6 +78,35 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
 
     if sent == 0:
         context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
+        
+def send_reddit(update, context, mode="cosplay"):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, f"📡 Cerco contenuti Reddit ({mode})...")
+    cache = load_cache(mode)
+    results = fetch_reddit(limit=30, target=mode)
+
+    sent = 0
+    for item in results:
+        if item['link'] in cache or is_banned(item['title']):
+            continue
+        try:
+            ext = item.get("ext", "")
+            if ext in ['gif', 'webm', 'mp4']:
+                context.bot.send_video(chat_id=chat_id, video=item['link'], caption=f"{item['title']}")
+            else:
+                context.bot.send_photo(chat_id=chat_id, photo=item['thumb'], caption=f"{item['title']}")
+            cache.add(item['link'])
+            sent += 1
+            if sent >= 10:
+                break
+        except Exception as e:
+            print(f"[!] Reddit send error: {e}")
+            continue
+
+    save_cache(mode, cache)
+
+    if sent == 0:
+        context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto Reddit nuovo.")
 
 def reset_cache(update: Update, context: CallbackContext):
     for mode in CACHE_FILES:
@@ -141,7 +170,7 @@ def loop_off(update: Update, context: CallbackContext):
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("new", cmd_new))
 dispatcher.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
-dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_content(u, c, "cosplay")))
+dispatcher.add_handler(CommandHandler("cosplay", lambda u, c: send_reddit(u, c, "cosplay")))
 dispatcher.add_handler(CommandHandler("real", lambda u, c: send_content(u, c, "real")))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("loopon", loop_on))
