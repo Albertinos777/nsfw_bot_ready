@@ -2,14 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_manytoon(limit=10):
-    print(f"[DEBUG] fetch_manytoon() limit={limit}")
+    print(f"[DEBUG] fetch_manytoon()")
     results = []
     url = "https://manytoon.com/genre/mature/"
     headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
         cards = soup.select("div.bs")
 
         for card in cards:
@@ -24,9 +24,9 @@ def fetch_manytoon(limit=10):
 
             title = img.get("alt", "Manhwa").strip()
             link = a["href"]
-            thumb = img.get("src")
+            thumb = img["src"]
 
-            if any(x in title.lower() for x in ['yaoi', 'bl', 'gay', 'futanari']):
+            if any(term in title.lower() for term in ['yaoi', 'bl', 'futanari', 'gay']):
                 continue
 
             results.append({
