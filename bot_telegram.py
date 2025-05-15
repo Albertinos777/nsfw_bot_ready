@@ -143,8 +143,10 @@ def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Benvenuto! Comandi disponibili:\n"
         "/new\n/hentai\n/cosplay\n/real\n/reddit\n/audio\n"
+        "/gif\n/creampie\n/facial\n/milf\n/ass\n"
         "/loopon\n/loopoff\n/resetcache\n/fav <link>\n/favorites\n/random <tag>"
     )
+
 
 def cmd_new(update: Update, context: CallbackContext):
     send_content(update, context, "hentai")
@@ -247,6 +249,12 @@ dispatcher.add_handler(CommandHandler("fav", add_fav))
 dispatcher.add_handler(CommandHandler("favorites", list_fav))
 dispatcher.add_handler(CommandHandler("random", random_tag))
 dispatcher.add_handler(CommandHandler("audio", send_audio))
+dispatcher.add_handler(CommandHandler("gif", lambda u, c: send_content(u, c, "gif")))
+dispatcher.add_handler(CommandHandler("creampie", lambda u, c: send_content(u, c, "creampie")))
+dispatcher.add_handler(CommandHandler("facial", lambda u, c: send_content(u, c, "facial")))
+dispatcher.add_handler(CommandHandler("milf", lambda u, c: send_content(u, c, "milf")))
+dispatcher.add_handler(CommandHandler("ass", lambda u, c: send_content(u, c, "ass")))
+
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
