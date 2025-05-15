@@ -114,24 +114,32 @@ def send_porno(update: Update, context: CallbackContext):
     if sent == 0:
         context.bot.send_message(chat_id=chat_id, text="❌ Nessun video trovato.")
 
+def is_direct_link(url):
+    return url.lower().endswith(('.mp4', '.webm', '.jpg', '.jpeg', '.png', '.gif'))
+
 def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
     link = item['link']
     caption = f"{item['title'][:100]}\n🔗 {link}"
 
+    if not is_direct_link(link):
+        print(f"[!] Link NON diretto, invio solo testo: {link}")
+        bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+        return
+
     try:
         if ext in ['mp4', 'webm']:
             bot.send_video(chat_id=chat_id, video=link, caption=caption, timeout=30)
-        elif ext == 'gif':
+        elif ext in ['gif']:
             bot.send_animation(chat_id=chat_id, animation=link, caption=caption, timeout=30)
         elif ext in ['jpg', 'jpeg', 'png']:
             bot.send_photo(chat_id=chat_id, photo=link, caption=caption, timeout=30)
         else:
-            raise Exception("Formato non supportato")
+            bot.send_document(chat_id=chat_id, document=link, caption=caption, timeout=30)
     except Exception as e:
         print(f"[!] Errore nel caricamento media: {e}")
-        sys.stdout.flush()
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+
 
 def send_manhwa(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
