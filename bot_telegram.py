@@ -13,6 +13,7 @@ from fetcher_hqporner import fetch_hqporner
 from fetcher_audio import fetch_audio
 
 TOKEN = os.environ.get("TOKEN")
+print(f"[DEBUG] TOKEN ENV: {TOKEN}")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 app = Flask(__name__)
@@ -311,6 +312,7 @@ dispatcher.add_handler(CommandHandler("porno", send_porno))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
+    print("[DEBUG] Ricevuto POST da Telegram!")
     update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     return "OK"
