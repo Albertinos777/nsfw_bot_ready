@@ -27,6 +27,10 @@ def fetch_reddit(limit=10, sort="new", target="cosplay"):
             ],
             "real": [
                 "RealGirls", "NSFW_GIF", "GoneWild", "cumsluts", "Creampies"
+            ],
+            "reddit_all": [
+                "cumsluts", "NSFW_GIF", "GoneWild", "Creampies",
+                "AssGifs", "nsfwhardcore", "analgw", "pornin15seconds"
             ]
         }
 
