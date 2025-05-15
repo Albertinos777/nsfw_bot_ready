@@ -2,41 +2,41 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_hqporner(limit=10):
-    print(f"[DEBUG] fetch_hqporner() chiamato (limit={limit})")
-    base_url = "https://hqporner.com"
+    print(f"[DEBUG] fetch_hqporner()")
     results = []
+    base_url = "https://hqporner.com"
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
-        r = requests.get(f"{base_url}/categories/creampie.html", timeout=10)
+        r = requests.get(f"{base_url}/hd-porn-videos.html", headers=headers, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
-        videos = soup.select("div.video-item")
+        links = soup.select("div.racy > a")
 
-        for item in videos:
+        for a in links:
             if len(results) >= limit:
                 break
 
-            a = item.select_one("a")
-            if not a:
+            href = a["href"]
+            full_link = base_url + href
+            page = requests.get(full_link, headers=headers, timeout=10)
+            psoup = BeautifulSoup(page.text, "html.parser")
+
+            video_tag = psoup.find("video")
+            source = video_tag.find("source") if video_tag else None
+            mp4 = source["src"] if source else ""
+
+            if not mp4 or not mp4.endswith(".mp4"):
                 continue
 
-            link = base_url + a.get("href")
-            title = a.get("title") or "HQPorner"
-            thumb = item.select_one("img")
-            thumb_url = thumb.get("data-src") or thumb.get("src")
-
-            if any(x in title.lower() for x in ['gay', 'yaoi', 'futanari']):
-                continue
-
-            # HQPorner non fornisce .mp4 diretto → mostriamo il link
+            title = psoup.find("title").text.strip().replace(" - HQPorner.com", "")
             results.append({
                 "title": title,
-                "link": link,
-                "thumb": thumb_url,
-                "ext": "html"  # fallback, viene trattato come documento
+                "link": mp4,
+                "thumb": "",
+                "ext": "mp4"
             })
 
     except Exception as e:
-        print(f"[!] Errore HQPorner: {e}")
+        print(f"[!] HQPorner error: {e}")
 
-    print(f"[DEBUG] fetch_hqporner ha trovato {len(results)} risultati")
     return results
