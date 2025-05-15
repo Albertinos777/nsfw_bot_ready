@@ -114,8 +114,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     elif mode == "cosplay":
         results += fetch_reddit(limit=30, sort="new", target="cosplay")
     elif mode == "real":
-        results += fetch_spankbang(limit=15)
-        results += fetch_pornhub(limit=15)
+        results += fetch_hqporner(limit=15)  # ✅ usa solo HQPorner ora
     elif mode == "reddit_all":
         results += fetch_reddit(limit=30, sort="hot", target="reddit_all")
 
@@ -208,8 +207,7 @@ def loop_worker(chat_id):
                 elif mode == "cosplay":
                     results += fetch_reddit(limit=5, sort="new", target="cosplay")
                 elif mode == "real":
-                    results += fetch_spankbang(limit=5)
-                    results += fetch_pornhub(limit=5)
+                    results += fetch_hqporner(limit=5)
                 elif mode == "reddit_all":
                     results += fetch_reddit(limit=5, sort="hot", target="reddit_all")
                 for item in results:
