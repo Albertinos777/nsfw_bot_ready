@@ -198,6 +198,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             if item['link'] in cache or is_banned(item['title'] + item['link']):
                 continue
             send_media(context.bot, chat_id, item)
+            time.sleep(2)
             cache.add(item['link'])
             sent += 1
             if sent >= 10:
@@ -208,10 +209,11 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         if sent == 0:
             context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo trovato.")
 
-    except Exception as e:
-        import traceback
-        print(f"\n[!] Errore in send_content({mode}):\n{traceback.format_exc()}\n")
-        context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
+    except RetryAfter as e:
+        wait_time = int(str(e).split()[-2])
+        print(f"[!] Flood limit, attendo {wait_time} secondi...")
+        time.sleep(wait_time + 1)
+        context.bot.send_message(chat_id=chat_id, text="⏱ Riprova fra qualche secondo...")
 
 
 def reset_cache(update: Update, context: CallbackContext):
