@@ -1,37 +1,48 @@
 import requests
 from bs4 import BeautifulSoup
-import random
 
 def fetch_nhentai(limit=10):
-    print(f"[DEBUG] fetch_nhentai chiamato con target = {target}")
-    print("[+] Fetching from nhentai...")
+    print(f"[DEBUG] fetch_nhentai() chiamato (limit={limit})")
     results = []
-    page = random.randint(1, 25)
+    page = 1
 
-    try:
-        r = requests.get(f"https://nhentai.net/?page={page}", headers={"User-Agent": "Mozilla/5.0"})
+    while len(results) < limit and page <= 10:
+        url = f"https://nhentai.net/?page={page}"
+        r = requests.get(url)
         soup = BeautifulSoup(r.text, 'html.parser')
         gallery_items = soup.select('.gallery')
 
         for item in gallery_items:
             if len(results) >= limit:
                 break
-            try:
-                title = item.select_one('.caption').text.strip()
-                link = "https://nhentai.net" + item.select_one('a')['href']
-                img = item.select_one('img')
-                thumb = img['data-src'] if img.has_attr('data-src') else img['src']
 
-                if any(tag in title.lower() for tag in ['futanari', 'yaoi']):
-                    continue
-                results.append({
-                    "title": title,
-                    "link": link,
-                    "thumb": thumb,
-                    "ext": "jpg"
-                })
-            except Exception as e:
+            title_tag = item.select_one('.caption')
+            link_tag = item.select_one('a')
+            img_tag = item.select_one('img')
+
+            if not (title_tag and link_tag and img_tag):
                 continue
-    except Exception as e:
-        print(f"[!] nhentai error: {e}")
+
+            title = title_tag.text.strip()
+            link = "https://nhentai.net" + link_tag['href']
+            cover = img_tag.get('data-src') or img_tag.get('src')
+
+            # Filtro
+            if any(bad in title.lower() for bad in ['futanari', 'yaoi', 'gay']):
+                continue
+
+            # Se non è a colori
+            if 'full color' not in title.lower():
+                continue
+
+            results.append({
+                'title': title,
+                'link': link,
+                'thumb': cover,
+                'ext': cover.split('.')[-1]
+            })
+
+        page += 1
+
+    print(f"[DEBUG] fetch_nhentai ha trovato {len(results)} risultati")
     return results
