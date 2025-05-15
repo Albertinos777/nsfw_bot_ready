@@ -41,6 +41,19 @@ CACHE_FILES = {
 
 FAV_FILE = "favorites.json"
 loop_enabled = {}
+import atexit
+
+# Reset globale del loop all'avvio
+loop_enabled.clear()
+print("[BOOT] Loop disattivato globalmente all'avvio.")
+
+# Disattiva anche alla chiusura forzata
+def cleanup():
+    loop_enabled.clear()
+    print("[EXIT] Loop disattivato alla terminazione.")
+
+atexit.register(cleanup)
+
 
 # --------------- UTIL ------------------
 
