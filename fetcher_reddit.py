@@ -2,8 +2,8 @@ import praw
 import os
 import random
 
-def fetch_reddit(limit=10, sort="new", target="cosplay"):
-    print(f"[+] Fetching Reddit /{target}...")
+def fetch_reddit(limit=10, sort="hot", target="cosplay"):
+    print(f"[+] Fetching Reddit ({target})...")
     results = []
 
     try:
@@ -16,39 +16,33 @@ def fetch_reddit(limit=10, sort="new", target="cosplay"):
             check_for_async=False
         )
 
-        # Subreddit diversi per tipo
         subreddits = {
             "cosplay": [
                 "nsfwcosplay", "cosplaygirls", "sexycosplay", "CosplayBoobs",
                 "CosplayButts", "cosplaybabes", "nsfwcosplaygw"
             ],
-            "hentai": [
-                "hentai", "rule34", "ecchi", "UncensoredHentai", "Hentai_GIF"
-            ],
-            "real": [
-                "RealGirls", "NSFW_GIF", "GoneWild", "cumsluts", "Creampies"
-            ],
             "reddit_all": [
-                "cumsluts", "NSFW_GIF", "GoneWild", "Creampies",
-                "AssGifs", "nsfwhardcore", "analgw", "pornin15seconds"
+                "cumsluts", "NSFW_GIF", "GoneWild", "Creampies", "AssGifs",
+                "analgw", "pornin15seconds", "nsfw_hd", "realgirls"
             ]
         }
 
-        chosen_subs = subreddits.get(target, subreddits["cosplay"])
+        chosen_subs = subreddits.get(target, [])
         random.shuffle(chosen_subs)
 
         for sub in chosen_subs:
             try:
-                posts = getattr(reddit.subreddit(sub), sort)(limit=limit * 2)
+                subreddit = reddit.subreddit(sub)
+                posts = getattr(subreddit, sort)(limit=limit * 2)
                 for post in posts:
                     title = post.title.lower()
                     url = post.url.lower()
-                    if any(w in title or w in url for w in ['futanari', 'yaoi', 'trap', 'gay']):
+                    if any(w in title + url for w in ['futanari', 'yaoi', 'trap', 'gay', 'svg', 'gifv', 'tiff']):
                         continue
                     if post.over_18 and not post.is_self:
-                        if any(ext in post.url for ext in ['.jpg', '.png', '.gif', '.mp4', '.webm']):
+                        if any(ext in url for ext in ['.jpg', '.png', '.gif', '.mp4', '.webm']):
                             results.append({
-                                'title': f"{sub} - {post.title[:100]}",
+                                'title': post.title,
                                 'link': post.url,
                                 'thumb': post.url,
                                 'ext': post.url.split('.')[-1]
