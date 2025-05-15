@@ -62,20 +62,22 @@ def is_banned(title_or_url):
 
 def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
-    caption = f"{item['title'][:100]}\n🔗 {item['link']}"
+    link = item['link']
+    caption = f"{item['title'][:100]}\n🔗 {link}"
 
     try:
         if ext in ['mp4', 'webm']:
-            bot.send_video(chat_id=chat_id, video=item['link'], caption=caption, timeout=30)
+            bot.send_video(chat_id=chat_id, video=link, caption=caption, timeout=30)
         elif ext in ['gif']:
-            bot.send_animation(chat_id=chat_id, animation=item['link'], caption=caption, timeout=30)
+            bot.send_animation(chat_id=chat_id, animation=link, caption=caption, timeout=30)
         elif ext in ['jpg', 'jpeg', 'png']:
-            bot.send_photo(chat_id=chat_id, photo=item['thumb'], caption=caption, timeout=30)
+            bot.send_photo(chat_id=chat_id, photo=link, caption=caption, timeout=30)
         else:
-            bot.send_document(chat_id=chat_id, document=item['link'], caption=caption, timeout=30)
+            bot.send_document(chat_id=chat_id, document=link, caption=caption, timeout=30)
     except Exception as e:
-        print(f"[!] Media error: {e}")
-        bot.send_message(chat_id=chat_id, text=f"⚠️ Non riesco a caricare:\n{item['link']}")
+        print(f"[!] Errore media: {e}")
+        # fallback: solo link testuale
+        bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
 
 
 # --------------- HANDLERS ------------------
