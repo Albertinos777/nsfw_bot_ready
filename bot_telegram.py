@@ -146,7 +146,7 @@ def send_manhwa(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id, "📖 Cerco Manhwa erotici...")
 
     results = fetch_manytoon(limit=10)
-    cache = load_cache("manytoon")
+    cache = load_cache("manhwa")
     sent = 0
 
     for item in results:
@@ -158,7 +158,7 @@ def send_manhwa(update: Update, context: CallbackContext):
         if sent >= 10:
             break
 
-    save_cache("manytoon", cache)
+    save_cache("manhwa", cache)
     if sent == 0:
         context.bot.send_message(chat_id=chat_id, text="❌ Nessun manhwa trovato.")
 
