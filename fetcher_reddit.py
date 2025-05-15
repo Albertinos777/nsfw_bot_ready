@@ -18,12 +18,13 @@ def fetch_reddit(limit=10, sort="hot", target="cosplay"):
 
         subreddits = {
             "cosplay": [
-                "nsfwcosplay", "cosplaygirls", "sexycosplay", "CosplayBoobs",
-                "CosplayButts", "cosplaybabes", "nsfwcosplaygw"
+                "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
+                "lewdcosplay", "cosplaybabes", "cosplaybutts"
             ],
             "reddit_all": [
-                "cumsluts", "NSFW_GIF", "GoneWild", "Creampies", "AssGifs",
-                "analgw", "pornin15seconds", "nsfw_hd", "realgirls"
+                "GoneWild", "cumsluts", "NSFW_GIF", "Creampies", "AssGifs",
+                "PetiteGoneWild", "nsfw_hd", "AnalGW", "porninfifteenseconds",
+                "boobbounce", "realgirls", "NSFW_Snapchat", "Wild_Hardcore"
             ]
         }
 
