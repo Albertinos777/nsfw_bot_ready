@@ -128,7 +128,11 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
 
         for item in results:
             item_id = f"{item['title']}_{item['link']}"
-            if item_id in cache or is_banned(item['title'] + item['link']):
+            if item['link'] in cache:
+                continue
+            if is_banned(item['title'] + item['link']):
+                continue
+            if not item['link'].lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm')):
                 continue
             send_media(context.bot, chat_id, item)
             cache.add(item_id)
