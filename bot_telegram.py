@@ -10,7 +10,7 @@ from telegram.ext import Dispatcher, CommandHandler, CallbackContext
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
-from fetcher_hqpornero import fetch_hqpornero
+from fetcher_eporner import fetch_eporner
 from fetcher_audio import fetch_audio
 from fetcher_manhwa import fetch_manhwa
 
@@ -115,7 +115,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
         elif mode == "porno":
-            results += fetch_hqpornero(limit=15)
+            results += fetch_eporner(limit=15)
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
 
