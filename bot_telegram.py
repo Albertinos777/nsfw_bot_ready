@@ -110,7 +110,6 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         elif mode == "real":
             results += fetch_reddit(limit=20, sort="top", target="reddit_all")
         elif mode == "porno":
-            from fetcher_hqpornero import fetch_hqpornero
             results += fetch_hqpornero(limit=15)
         elif mode in CACHE_FILES:
             results += fetch_reddit(limit=30, sort="hot", target="reddit_all", tag=mode)
