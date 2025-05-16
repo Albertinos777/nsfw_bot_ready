@@ -87,6 +87,8 @@ def send_media(bot, chat_id, item):
     ext = item.get("ext", item['link'].split('.')[-1].lower())
     link = item['link']
     caption = f"{item['title'][:100]}\n🔗 {link}"
+    if link.endswith('.gifv'):
+        link = link.replace('.gifv', '.mp4')
 
     try:
         if ext in ['mp4', 'webm']:
