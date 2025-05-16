@@ -3,14 +3,9 @@ import os
 import random
 
 def is_valid_reddit_link(url):
-    return (
-        url.endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm')) and
-        "gifv" not in url and
-        "redgifs.com" not in url and
-        "imgur.com/a/" not in url
-    )
+    return url.endswith((".mp4", ".gif", ".jpg", ".jpeg", ".png", ".webm"))
 
-def fetch_reddit(limit=20, sort="hot", target="reddit_all", tag=None):
+def fetch_reddit(limit=40, sort="hot", target="gif", tag=None):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}")
     results = []
 
@@ -23,57 +18,38 @@ def fetch_reddit(limit=20, sort="hot", target="reddit_all", tag=None):
         check_for_async=False
     )
 
-    subreddits = {
-        "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"],
-        "cosplayx": ["nsfwcosplay", "cosplayonoff", "cosplaybutts", "cosplayboobs", "cosplaynsfw"],
-        "reddit_all": ["GoneWild", "NSFW_GIF", "cumsluts", "Creampies", "PetiteGoneWild", "AssGifs", "boobbounce", "nsfw_hd", "realgirls"],
-        "gif": ["NSFW_GIF", "AssGifs", "cumsluts", "analgifs"],
-        "creampie": ["Creampies", "cumsluts", "AnalGW"],
-        "facial": ["cumsluts", "GirlsFinishingTheJob"],
-        "milf": ["milf", "HotMILFs", "RealMilfs", "maturemilf", "Milf_Gifs"],
-        "ass": ["AssGifs", "pawgtastic", "ass", "asstastic", "analgw"],
-        "facesitting": ["facesitting", "face_sit", "nsfwfacesitting"],
-        "tightsfuck": ["tightsfuck", "pantyhose", "pantyfetish", "nylongirls"],
-        "posing": ["nsfwposing", "nakedposing", "sexyposing"],
-        "realhot": ["realgirls", "NSFW_Snapchat", "GirlsInLingerie"],
-        "rawass": ["AssGifs", "pawgtastic", "RealGirls"],
-        "perfectcos": ["cosplaygirls", "cosplaybabes", "lewdcosplay"]
+    subreddits_map = {
+        "gif": ["NSFW_GIF", "porninfifteenseconds", "AssGifs"],
+        "creampie": ["Creampies", "analcreampie"],
+        "facial": ["cumfetish", "facialcumsluts"],
+        "milf": ["milf", "MilfandCum"],
+        "ass": ["ass", "tightass", "asstastic"],
+        "cosplay": ["nsfwcosplay", "cosplaybabes"],
+        "reddit_all": ["GoneWild", "NSFW_Snapchat", "realgirls", "PetiteGoneWild"],
+        "cosplayx": ["nsfwcosplay", "cosplaybabes", "SexyCosplayGirls", "cosplaygirls"],
+        "perfectcos": ["NSFWCostumes", "lewdcosplay", "cosplaybutts"],
+        "rawass": ["ass", "asstastic", "booty", "assholegonewild"],
+        "facesitting": ["facesitting", "FaceSittingGW", "asslicking"],
+        "tightsfuck": ["pantyhose", "TightShorts", "leggingsgonewild"],
+        "posing": ["PetiteGoneWild", "ass", "gonewildcurvy"],
+        "realhot": ["realgirls", "Amateur", "gonewild", "NSFW_Snapchat"]
     }
 
-    chosen_subs = subreddits.get(target, [])
-    if not chosen_subs:
-        return []
+    subs = subreddits_map.get(target, ["GoneWild"])
+    chosen = random.sample(subs, min(3, len(subs)))
 
-    random.shuffle(chosen_subs)
-    for sub in chosen_subs:
+    for sub in chosen:
         try:
             subreddit = reddit.subreddit(sub)
-            if sort == "hot":
-                posts = subreddit.hot(limit=100)
-            elif sort == "new":
-                posts = subreddit.new(limit=100)
-            else:
-                posts = subreddit.top(time_filter="month", limit=100)
-
+            posts = getattr(subreddit, sort)(limit=limit)
             for post in posts:
-                url = post.url
-                title = post.title
-
-                if not is_valid_reddit_link(url):
-                    continue
-                if tag and tag.lower() not in title.lower():
-                    continue
-                if post.over_18 and not post.is_self:
+                if post.over_18 and not post.is_self and is_valid_reddit_link(post.url):
                     results.append({
-                        'title': title,
-                        'link': url,
-                        'thumb': url,
-                        'ext': url.split('.')[-1]
+                        "title": post.title,
+                        "link": post.url,
+                        "thumb": post.url,
+                        "ext": post.url.split('.')[-1]
                     })
-                    if len(results) >= limit:
-                        return results
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
-            continue
-
     return results
