@@ -1,50 +1,49 @@
 import requests
 from bs4 import BeautifulSoup
+import random
 
-def fetch_hqpornero(limit=10, tag=""):
+def fetch_hqpornero(limit=10):
     print("[DEBUG] fetch_hqpornero()")
     results = []
-    page = 1
+    base_url = "https://hqpornero.com"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-    while len(results) < limit and page <= 5:
-        url = f"https://hqpornero.com/page/{page}/"
-        if tag:
-            url = f"https://hqpornero.com/tag/{tag}/page/{page}/"
+    try:
+        main = requests.get(base_url + "/videos", headers=headers, timeout=10)
+        soup = BeautifulSoup(main.content, "html.parser")
 
-        try:
-            r = requests.get(url, timeout=10)
-            soup = BeautifulSoup(r.text, "html.parser")
-            articles = soup.select("article")
+        video_links = [a['href'] for a in soup.select("a.video-thumb") if a['href'].startswith("/video/")]
+        random.shuffle(video_links)
 
-            for a in articles:
-                if len(results) >= limit:
-                    break
+        for link in video_links:
+            video_page = requests.get(base_url + link, headers=headers, timeout=10)
+            if video_page.status_code != 200:
+                continue
 
-                title_elem = a.select_one("h2.entry-title a")
-                video_page_url = title_elem["href"]
-                title = title_elem.text.strip()
+            vsoup = BeautifulSoup(video_page.content, "html.parser")
+            title = vsoup.select_one("h1.entry-title")
+            video_tag = vsoup.find("video")
 
-                # Vai alla pagina del video per estrarre link diretto
-                try:
-                    vr = requests.get(video_page_url, timeout=10)
-                    vsoup = BeautifulSoup(vr.text, "html.parser")
-                    video_tag = vsoup.find("video")
-                    if video_tag and video_tag.find("source"):
-                        mp4_url = video_tag.find("source").get("src")
-                        if mp4_url.endswith(".mp4"):
-                            results.append({
-                                "title": title,
-                                "link": mp4_url,
-                                "thumb": a.select_one("img")["src"],
-                                "ext": "mp4"
-                            })
-                except Exception as ve:
-                    print(f"[!] Errore video page {video_page_url}: {ve}")
-                    continue
+            if not video_tag or not video_tag.find("source"):
+                continue
 
-        except Exception as e:
-            print(f"[!] Errore hqpornero page {page}: {e}")
+            video_url = video_tag.find("source")['src']
+            if not video_url.endswith(".mp4"):
+                continue
 
-        page += 1
+            results.append({
+                "title": title.text.strip() if title else "HQPornero",
+                "link": video_url,
+                "thumb": video_url,  # fallback
+                "ext": "mp4"
+            })
+
+            if len(results) >= limit:
+                break
+
+    except Exception as e:
+        print(f"[!] HQPornero fetch error: {e}")
 
     return results
