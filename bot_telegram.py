@@ -108,7 +108,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             "cosplay", "real", "cosplayx", "gif", "creampie", "facial", "milf",
             "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"
         ]:
-            results += fetch_reddit(limit=30, target=mode)
+            results += fetch_reddit(limit=200, target=mode)
         
         # --- Fonti esterne ---
         elif mode == "hentai":
