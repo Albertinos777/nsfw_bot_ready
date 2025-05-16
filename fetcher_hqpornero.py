@@ -28,14 +28,13 @@ def fetch_hqpornero(limit=10, tag=""):
                 try:
                     vr = requests.get(video_page_url, timeout=10)
                     vsoup = BeautifulSoup(vr.text, "html.parser")
-                    iframe = vsoup.find("iframe")
-                    if iframe and "src" in iframe.attrs:
-                        video_embed_url = iframe["src"]
-                        # Alcuni link di embed diretti
-                        if video_embed_url.endswith(".mp4"):
+                    video_tag = vsoup.find("video")
+                    if video_tag and video_tag.find("source"):
+                        mp4_url = video_tag.find("source").get("src")
+                        if mp4_url.endswith(".mp4"):
                             results.append({
                                 "title": title,
-                                "link": video_embed_url,
+                                "link": mp4_url,
                                 "thumb": a.select_one("img")["src"],
                                 "ext": "mp4"
                             })
