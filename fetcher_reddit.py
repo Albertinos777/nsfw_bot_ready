@@ -1,8 +1,12 @@
 import os
 import praw
-import random
 
-def fetch_reddit(limit=10, sort="hot", target="reddit_all", tag=None):
+def is_valid_reddit_link(url):
+    banned_ext = ['.gifv', '.tiff', '.svg']
+    banned_hosts = ['redgifs.com', 'gfycat.com', 'imgur.com/a/', 'v.redd.it']
+    return not any(b in url for b in banned_ext + banned_hosts)
+
+def fetch_reddit(limit=20, sort="hot", target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}, tag={tag}")
     results = []
 
@@ -17,45 +21,47 @@ def fetch_reddit(limit=10, sort="hot", target="reddit_all", tag=None):
 
     subreddits = {
         "cosplay": [
-            "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
-            "lewdcosplay", "cosplaybutts"
+            "nsfwcosplay", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybutts"
         ],
         "reddit_all": [
-            "GoneWild", "cumsluts", "NSFW_GIF", "Creampies", "AssGifs",
-            "PetiteGoneWild", "nsfw_hd", "AnalGW", "porninfifteenseconds",
-            "boobbounce", "realgirls", "NSFW_Snapchat", "Wild_Hardcore"
-        ]
+            "GoneWild", "cumsluts", "NSFW_GIF", "Creampies", "AssGifs", "PetiteGoneWild",
+            "nsfw_hd", "AnalGW", "porninfifteenseconds", "boobbounce", "realgirls"
+        ],
+        "gif": ["NSFW_GIF", "porninfifteenseconds"],
+        "creampie": ["Creampies", "Creampie_Anal", "Creampie_Gifs"],
+        "facial": ["facial", "cumontits", "cumsluts"],
+        "milf": ["milf", "maturemilf", "realmilfs"],
+        "ass": ["AssGifs", "asstastic", "assholegonewild"],
+        "cosplayx": ["NSFWCostumes", "lewdcosplay", "cosplaygirls", "cosplaybutts"],
+        "facesitting": ["facesitting", "FaceSitting_GIFS"],
+        "tightsfuck": ["Tightdresses", "PantyhoseGirls", "leggingsgonewild"],
+        "posing": ["NSFW_Posing", "Hotchicksposing", "RealGirls"],
+        "realhot": ["realgirls", "AmateurArchives"],
+        "rawass": ["asstastic", "assholegonewild"],
+        "perfectcos": ["SexyCosplayGirls", "cosplaybabes"]
     }
 
-    subs = subreddits.get(target, subreddits["reddit_all"])
-    chosen = random.sample(subs, min(len(subs), 4))
+    chosen_subs = subreddits.get(target, [])
+    if not chosen_subs:
+        return []
 
-    for sub in chosen:
+    for sub in chosen_subs:
         try:
             subreddit = reddit.subreddit(sub)
             posts = getattr(subreddit, sort)(limit=limit * 2)
+
             for post in posts:
-                url = post.url.lower()
-                title = post.title.lower()
-
-                if tag and tag not in title:
-                    continue
-                if not post.over_18 or post.is_self or post.score < 500:
-                    continue
-                if any(bad in url for bad in ['.gifv', '.svg', '.tiff']):
-                    continue
-                if any(bad in title for bad in ['futanari', 'yaoi', 'gay', 'trap', 'dickgirl']):
-                    continue
-
-                ext = url.split('.')[-1]
-                results.append({
-                    'title': post.title,
-                    'link': post.url,
-                    'thumb': post.url,
-                    'ext': ext
-                })
-                if len(results) >= limit:
-                    return results
+                if post.over_18 and not post.is_self and is_valid_reddit_link(post.url):
+                    if any(bad in post.title.lower() for bad in ["futanari", "yaoi", "trap", "dickgirl", "gay"]):
+                        continue
+                    results.append({
+                        "title": post.title,
+                        "link": post.url,
+                        "thumb": post.url,
+                        "ext": post.url.split('.')[-1]
+                    })
+                    if len(results) >= limit:
+                        break
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
             continue
