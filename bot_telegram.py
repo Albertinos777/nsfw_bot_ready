@@ -13,6 +13,9 @@ from fetcher_reddit import fetch_reddit
 from fetcher_eporner import fetch_eporner
 from fetcher_audio import fetch_audio
 from fetcher_manhwa import fetch_manhwa
+from fetcher_redgifs import fetch_redgifs
+from fetcher_e621 import fetch_e621
+from fetcher_rule34video import fetch_rule34video
 
 TOKEN = os.environ.get("TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
@@ -25,7 +28,7 @@ CACHE_FILES = {
     "hentai": "cache_hentai.json",
     "cosplay": "cache_cosplay.json",
     "real": "cache_real.json",
-    "porno": "cache_porno.json",
+    "porno": "cache_porno.json",  # ora usa rule34video
     "manhwa": "cache_manhwa.json",
     "reddit_all": "cache_reddit.json",
     "gif": "cache_gif.json",
@@ -39,7 +42,10 @@ CACHE_FILES = {
     "posing": "cache_posing.json",
     "realhot": "cache_realhot.json",
     "rawass": "cache_rawass.json",
-    "perfectcos": "cache_perfectcos.json"
+    "perfectcos": "cache_perfectcos.json",
+    "redgifs": "cache_redgifs.json",
+    "e621": "cache_e621.json",
+    "rule34video": "cache_rule34video.json"
 }
 
 FAV_FILE = "favorites.json"
@@ -117,10 +123,15 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_rule34(limit=20)
 
         elif mode == "porno":
-            results += fetch_eporner(limit=30)  # o altra fonte che stai usando
-
+            results += fetch_rule34video(limit=10)  # o altra fonte che stai usando
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
+        elif mode == "redgifs":
+            results += fetch_redgifs(limit=10)
+        elif mode == "e621":
+            results += fetch_e621(limit=10)
+        elif mode == "rule34video":
+            results += fetch_rule34video(limit=10)
 
         else:
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non valido.")
@@ -171,6 +182,7 @@ def start(update: Update, context: CallbackContext):
         "/new\n/hentai\n/cosplay\n/real\n/porno\n/manhwa\n"
         "/gif /creampie /facial /milf /ass\n"
         "/cosplayx /facesitting /tightsfuck /posing /realhot /rawass /perfectcos\n"
+        "/redgifs /e621 /rule34video\n"
         "/audio\n/fav <link>\n/favorites\n/random <tag>\n"
         "/loopon\n/loopoff\n/resetcache"
     )
@@ -284,6 +296,9 @@ dispatcher.add_handler(CommandHandler("random", random_tag))
 dispatcher.add_handler(CommandHandler("loopon", loop_on))
 dispatcher.add_handler(CommandHandler("loopoff", loop_off))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
+dispatcher.add_handler(CommandHandler("redgifs", lambda u, c: send_content(u, c, "redgifs")))
+dispatcher.add_handler(CommandHandler("e621", lambda u, c: send_content(u, c, "e621")))
+dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u, c, "rule34video")))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
