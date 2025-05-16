@@ -103,43 +103,22 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     results = []
 
     try:
-        if mode == "hentai":
+        # --- Sezione Reddit target dinamica ---
+        if mode in [
+            "cosplay", "real", "cosplayx", "gif", "creampie", "facial", "milf",
+            "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"
+        ]:
+            results += fetch_reddit(limit=30, target=mode)
+        
+        # --- Fonti esterne ---
+        elif mode == "hentai":
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
-        elif mode == "cosplay":
-            results += fetch_reddit(limit=30, sort="new", target="cosplay")
-        elif mode == "real":
-            results += fetch_reddit(limit=20, sort="top", target="reddit_all")
         elif mode == "porno":
             results += fetch_hqpornero(limit=15)
-        elif mode == "cosplayx":
-            results += fetch_reddit(limit=30, sort="new", target="cosplayx")
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
-        elif mode == "gif":
-            results += fetch_reddit(limit=20, sort="top", target="gif")
-        elif mode == "creampie":
-            results += fetch_reddit(limit=20, sort="top", target="creampie")
-        elif mode == "facial":
-            results += fetch_reddit(limit=20, sort="top", target="facial")
-        elif mode == "milf":
-            results += fetch_reddit(limit=20, sort="top", target="milf")
-        elif mode == "ass":
-            results += fetch_reddit(limit=20, sort="top", target="ass")
-        elif mode == "facesitting":
-            results += fetch_reddit(limit=20, sort="top", target="facesitting")
-        elif mode == "tightsfuck":
-            results += fetch_reddit(limit=20, sort="top", target="tightsfuck")
-        elif mode == "posing":
-            results += fetch_reddit(limit=20, sort="top", target="posing")
-        elif mode == "realhot":
-            results += fetch_reddit(limit=20, sort="top", target="realhot")
-        elif mode == "rawass":
-            results += fetch_reddit(limit=20, sort="top", target="rawass")
-        elif mode == "perfectcos":
-            results += fetch_reddit(limit=20, sort="top", target="perfectcos")
-        elif mode in CACHE_FILES:
-            results += fetch_reddit(limit=30, sort="hot", target="reddit_all", tag=mode)
+
         else:
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non valido.")
             return
@@ -148,10 +127,11 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         sent = 0
 
         for item in results:
-            if item['link'] in cache or is_banned(item['title'] + item['link']):
+            item_id = f"{item['title']}_{item['link']}"
+            if item_id in cache or is_banned(item['title'] + item['link']):
                 continue
             send_media(context.bot, chat_id, item)
-            cache.add(item['link'])
+            cache.add(item_id)
             sent += 1
             if sent >= 10:
                 break
@@ -165,6 +145,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         import traceback
         print(f"\n[!] Errore in send_content({mode}):\n{traceback.format_exc()}\n")
         context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
+
 
 def reset_cache(update: Update, context: CallbackContext):
     for mode in CACHE_FILES:
