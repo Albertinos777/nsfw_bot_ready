@@ -10,7 +10,7 @@ from telegram.ext import Dispatcher, CommandHandler, CallbackContext
 from fetcher_nhentai import fetch_nhentai
 from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
-from fetcher_hqporner import fetch_hqporner
+from fetcher_hqpornero import fetch_hqpornero
 from fetcher_audio import fetch_audio
 
 TOKEN = os.environ.get("TOKEN")
@@ -110,7 +110,8 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         elif mode == "real":
             results += fetch_reddit(limit=20, sort="top", target="reddit_all")
         elif mode == "porno":
-            results += fetch_hqporner(limit=15)
+            from fetcher_hqpornero import fetch_hqpornero
+            results += fetch_hqpornero(limit=15)
         elif mode in CACHE_FILES:
             results += fetch_reddit(limit=30, sort="hot", target="reddit_all", tag=mode)
         else:
