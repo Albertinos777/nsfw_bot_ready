@@ -26,7 +26,10 @@ SUBREDDITS = {
     "reddit_all": [
         "GoneWild", "NSFW_GIF", "Creampies", "NSFW_Snapchat", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"
     ],
-    "gif": ["NSFW_GIF", "porninfifteenseconds", "AssGifs", "boobbounce"],
+    "gif": [
+        "NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs",
+        "NSFW_Porn_GIF", "AdultGifs", "60fpsporn", "AnalGifs", "CumGifs"
+    ],
     "creampie": ["Creampies", "cumsluts", "AnalGW"],
     "facial": ["facial", "cumsluts", "cumonclothes"],
     "milf": ["MilfGW", "amateur_milfs", "milf", "maturemilf"],
