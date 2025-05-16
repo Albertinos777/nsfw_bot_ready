@@ -12,6 +12,7 @@ from fetcher_rule34 import fetch_rule34
 from fetcher_reddit import fetch_reddit
 from fetcher_hqpornero import fetch_hqpornero
 from fetcher_audio import fetch_audio
+from fetcher_manhwa import fetch_manhwa
 
 TOKEN = os.environ.get("TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
@@ -111,6 +112,32 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_reddit(limit=20, sort="top", target="reddit_all")
         elif mode == "porno":
             results += fetch_hqpornero(limit=15)
+        elif mode == "cosplayx":
+            results += fetch_reddit(limit=30, sort="new", target="cosplayx")
+        elif mode == "manhwa":
+            results += fetch_manhwa(limit=20)
+        elif mode == "gif":
+            results += fetch_reddit(limit=20, sort="top", target="gif")
+        elif mode == "creampie":
+            results += fetch_reddit(limit=20, sort="top", target="creampie")
+        elif mode == "facial":
+            results += fetch_reddit(limit=20, sort="top", target="facial")
+        elif mode == "milf":
+            results += fetch_reddit(limit=20, sort="top", target="milf")
+        elif mode == "ass":
+            results += fetch_reddit(limit=20, sort="top", target="ass")
+        elif mode == "facesitting":
+            results += fetch_reddit(limit=20, sort="top", target="facesitting")
+        elif mode == "tightsfuck":
+            results += fetch_reddit(limit=20, sort="top", target="tightsfuck")
+        elif mode == "posing":
+            results += fetch_reddit(limit=20, sort="top", target="posing")
+        elif mode == "realhot":
+            results += fetch_reddit(limit=20, sort="top", target="realhot")
+        elif mode == "rawass":
+            results += fetch_reddit(limit=20, sort="top", target="rawass")
+        elif mode == "perfectcos":
+            results += fetch_reddit(limit=20, sort="top", target="perfectcos")
         elif mode in CACHE_FILES:
             results += fetch_reddit(limit=30, sort="hot", target="reddit_all", tag=mode)
         else:
