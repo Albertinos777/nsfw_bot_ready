@@ -1,90 +1,89 @@
-import praw
 import os
+import praw
 import random
 
-from dotenv import load_dotenv
-load_dotenv()
-
 def is_valid_reddit_link(url):
-    return any(url.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm'])
+    valid_ext = ['.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm']
+    return any(url.lower().endswith(ext) for ext in valid_ext)
 
-def fetch_reddit(limit=50, target="cosplay", tag=None):
-    print(f"[DEBUG] fetch_reddit() target={target}, tag={tag}")
+def fetch_reddit(limit=20, sort="hot", target="reddit_all", tag=None):
+    print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}")
+    results = []
 
     reddit = praw.Reddit(
         client_id=os.environ.get("REDDIT_CLIENT_ID"),
         client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
         username=os.environ.get("REDDIT_USERNAME"),
         password=os.environ.get("REDDIT_PASSWORD"),
-        user_agent="nsfwbot by u/yourbot",
+        user_agent="nsfwbot by u/Albertinos777",
         check_for_async=False
     )
 
-    results = []
-
-    subreddit_map = {
-        "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay"],
-        "reddit_all": ["GoneWild", "NSFW_GIF", "PetiteGoneWild", "cumsluts", "RealGirls", "AssGifs", "AnalGW"],
+    subreddits = {
+        "cosplay": [
+            "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
+            "lewdcosplay", "cosplaybabes", "cosplaybutts"
+        ],
+        "cosplayx": [
+            "cosplaycumsluts", "cumcosplay", "cosplaycreampie"
+        ],
+        "reddit_all": [
+            "GoneWild", "cumsluts", "NSFW_GIF", "Creampies", "AssGifs",
+            "PetiteGoneWild", "nsfw_hd", "AnalGW", "porninfifteenseconds",
+            "boobbounce", "realgirls", "NSFW_Snapchat", "Wild_Hardcore"
+        ],
         "gif": ["NSFW_GIF", "porninfifteenseconds", "AssGifs"],
-        "creampie": ["Creampies", "cumsluts", "CreampieGifs"],
-        "facial": ["cumsluts", "GirlsFinishingTheJob"],
-        "milf": ["amateur_milfs", "milf", "GoneWild30Plus"],
-        "ass": ["ass", "paag", "AssGifs"],
-        "cosplayx": ["cosplaygirls", "SexyCosplayGirls", "cosplaybutts", "lewdcosplay"],
-        "facesitting": ["facesitting", "Smothering"],
-        "tightsfuck": ["PantyhoseGW", "tights", "UpskirtGW"],
-        "posing": ["PetiteGoneWild", "nsfwposing"],
-        "realhot": ["RealGirls", "NSFW_Snapchat"],
-        "rawass": ["ass", "tightdresses"],
-        "perfectcos": ["SexyCosplayGirls", "lewdcosplay", "NSFWCostumes"],
+        "creampie": ["Creampies", "CreampieGirls", "CreampieInsideMe"],
+        "facial": ["facial", "FacialGifs", "GirlsFinishingTheJob"],
+        "milf": ["nsfwmilf", "maturemilf", "LegalTeensAndMoms"],
+        "ass": ["ass", "pawg", "AnalGW"],
+        "facesitting": ["facesitting", "FaceSittingPics", "Facesitting_Gifs"],
+        "tightsfuck": ["girlsinyogapants", "TightDresses", "leggingsgonewild"],
+        "posing": ["assholegonewild", "facedownassup", "doggystyle"],
+        "realhot": ["realgirls", "LegalTeensXXX", "CollegeInitiation"],
+        "rawass": ["pawg", "AssholeGoneWild", "amateurcumsluts"],
+        "perfectcos": ["NSFWCostumes", "cosplaygirls", "SexyCosplayGirls"]
     }
 
-    chosen_subs = subreddit_map.get(target, ["nsfw"])
-    random.shuffle(chosen_subs)
+    selected_subs = subreddits.get(target, [])
+    random.shuffle(selected_subs)
+    selected_subs = selected_subs[:min(5, len(selected_subs))]
 
-    banned_keywords = ['futanari', 'yaoi', 'gay', 'trap', 'dickgirl', 'loli']
-
-    try:
-        for sub in chosen_subs:
+    for sub in selected_subs:
+        try:
             subreddit = reddit.subreddit(sub)
-
-            sort_mode = random.choice(["hot", "top", "new"])
-            time_filter = random.choice(["day", "week", "month", "year", "all"])
-
-            print(f"[DEBUG] Searching subreddit: r/{sub} | sort: {sort_mode} | time: {time_filter}")
-
-            if sort_mode == "top":
-                posts = subreddit.top(limit=limit * 2, time_filter=time_filter)
-            elif sort_mode == "new":
+            if sort == "new":
                 posts = subreddit.new(limit=limit * 2)
+            elif sort == "top":
+                posts = subreddit.top(limit=limit * 2, time_filter="year")
             else:
                 posts = subreddit.hot(limit=limit * 2)
 
             for post in posts:
-                if post.over_18 and not post.is_self:
-                    title = post.title.lower()
-                    url = post.url.lower()
+                if not post.over_18 or post.is_self:
+                    continue
+                url = post.url
+                title = post.title
 
-                    if any(b in title for b in banned_keywords):
-                        continue
-                    if tag and tag.lower() not in title and tag.lower() not in url:
-                        continue
-                    if not is_valid_reddit_link(url):
-                        continue
+                if tag and tag not in title.lower():
+                    continue
+                if not is_valid_reddit_link(url):
+                    continue
+                if any(bad in title.lower() for bad in ['futanari', 'yaoi', 'trap', 'gay', 'dickgirl']):
+                    continue
 
-                    results.append({
-                        'title': post.title,
-                        'link': post.url,
-                        'thumb': post.url,
-                        'ext': post.url.split('.')[-1].split("?")[0]
-                    })
+                results.append({
+                    'title': title,
+                    'link': url,
+                    'thumb': url,
+                    'ext': url.split('.')[-1]
+                })
 
                 if len(results) >= limit:
-                    break
-            if len(results) >= limit:
-                break
+                    return results
 
-    except Exception as e:
-        print(f"[!] Reddit error in fetch_reddit(): {e}")
+        except Exception as e:
+            print(f"[!] Reddit error in {sub}: {e}")
+            continue
 
     return results
