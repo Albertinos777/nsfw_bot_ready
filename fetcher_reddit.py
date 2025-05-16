@@ -3,7 +3,7 @@ import praw
 
 def is_valid_reddit_link(url):
     banned_ext = ['.gifv', '.tiff', '.svg']
-    banned_hosts = ['redgifs.com', 'gfycat.com', 'imgur.com/a/', 'v.redd.it']
+    banned_hosts = ['redgifs.com', 'gfycat.com', 'imgur.com/a/', 'v.redd.it', 'reddit.com/gallery']
     return not any(b in url for b in banned_ext + banned_hosts)
 
 def fetch_reddit(limit=20, sort="hot", target="reddit_all", tag=None):
