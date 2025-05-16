@@ -103,19 +103,22 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     results = []
 
     try:
-        # --- Sezione Reddit target dinamica ---
+        # -------- FONTI REDDIT CON RANDOM INTERNO --------
         if mode in [
             "cosplay", "real", "cosplayx", "gif", "creampie", "facial", "milf",
-            "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"
+            "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass",
+            "perfectcos", "reddit_all"
         ]:
-            results += fetch_reddit(limit=200, target=mode)
-        
-        # --- Fonti esterne ---
+            results += fetch_reddit(limit=100, sort=None, target=mode)
+
+        # -------- ALTRE FONTI ESTERNE --------
         elif mode == "hentai":
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
+
         elif mode == "porno":
-            results += fetch_eporner(limit=15)
+            results += fetch_eporner(limit=30)  # o altra fonte che stai usando
+
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
 
@@ -123,17 +126,22 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non valido.")
             return
 
-        random.shuffle(results)
+        random.shuffle(results)  # comunque un ulteriore mescolamento
         sent = 0
 
         for item in results:
+            # Identificativo unico per evitare ripetizioni
             item_id = f"{item['title']}_{item['link']}"
-            if item['link'] in cache:
+
+            # Filtri contenuti
+            if item_id in cache:
                 continue
             if is_banned(item['title'] + item['link']):
                 continue
             if not item['link'].lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm')):
                 continue
+
+            # Invio
             send_media(context.bot, chat_id, item)
             cache.add(item_id)
             sent += 1
