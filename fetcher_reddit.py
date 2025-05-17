@@ -21,7 +21,9 @@ SUBREDDITS = {
         "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"
     ],
     "cosplayx": [
-        "nsfwcosplay", "cosplayonlewd", "LewdAnimeCosplay", "HentaiCosplay"
+          "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
+          "lewdcosplay", "cosplaybutts", "cosplay_babes", "realcosplaygonewild",
+          "perfectcosplay", "naughtycospics"
     ],
     "reddit_all": [
         "GoneWild", "NSFW_GIF", "Creampies", "NSFW_Snapchat", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"
@@ -57,7 +59,7 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
     for sub in chosen:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
-            time_filter = random.choice(["day", "week", "month", "year"])
+            time_filter = random.choice(["day", "week", "month", "year", "all"])
 
             if final_sort == "top":
                 posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
