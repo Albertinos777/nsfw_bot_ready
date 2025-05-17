@@ -21,9 +21,9 @@ SUBREDDITS = {
         "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"
     ],
     "cosplayx": [
-          "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
-          "lewdcosplay", "cosplaybutts", "cosplay_babes", "realcosplaygonewild",
-          "perfectcosplay", "naughtycospics"
+        "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
+        "lewdcosplay", "cosplaybutts", "cosplay_babes", "realcosplaygonewild",
+        "perfectcosplay", "naughtycospics"
     ],
     "reddit_all": [
         "GoneWild", "NSFW_GIF", "Creampies", "NSFW_Snapchat", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"
@@ -55,14 +55,15 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
     if not subreddits:
         return []
 
-    chosen = random.sample(subreddits, min(len(subreddits), 4))
-    for sub in chosen:
+    random.shuffle(subreddits)
+
+    for sub in subreddits:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
             time_filter = random.choice(["day", "week", "month", "year", "all"])
 
             if final_sort == "top":
-                posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
+                posts = reddit.subreddit(sub).top(limit=limit * 2, time_filter=time_filter)
             elif final_sort == "hot":
                 posts = reddit.subreddit(sub).hot(limit=limit * 2)
             else:
@@ -77,11 +78,9 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
 
                 if not is_valid_url(url):
                     continue
-
                 if tag and tag.lower() not in title:
                     continue
-
-                if any(b in title for b in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
+                if any(bad in title for bad in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
                     continue
 
                 results.append({
@@ -96,5 +95,9 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
 
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
+            continue
+
+        if len(results) >= limit:
+            break
 
     return results
