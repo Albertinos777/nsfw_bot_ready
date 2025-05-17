@@ -111,50 +111,39 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
     results = []
 
     try:
-        # -------- FONTI REDDIT CON RANDOM INTERNO --------
         if mode in [
-            "cosplay", "real", "cosplayx", "gif", "creampie", "facial", "milf",
-            "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass",
-            "perfectcos", "reddit_all"
+            "cosplay", "cosplayx", "gif", "creampie", "facial", "milf",
+            "ass", "facesitting", "tightsfuck", "posing",
+            "realhot", "rawass", "perfectcos", "reddit_all"
         ]:
-            results += fetch_reddit(limit=200, sort=None, target=mode)
+            # Usa fetch_reddit migliorato con sort casuale (deciso dentro la funzione stessa)
+            results += fetch_reddit(limit=100, target=mode)
 
-        # -------- ALTRE FONTI ESTERNE --------
         elif mode == "hentai":
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
 
         elif mode == "porno":
-            results += fetch_rule34video(limit=10)  # o altra fonte che stai usando
+            results += fetch_eporner(limit=15)
+
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
-        elif mode == "redgifs":
-            results += fetch_redgifs(limit=10)
-        elif mode == "e621":
-            results += fetch_e621(limit=10)
-        elif mode == "rule34video":
-            results += fetch_rule34video(limit=10)
 
         else:
             context.bot.send_message(chat_id=chat_id, text="❌ Comando non valido.")
             return
 
-        random.shuffle(results)  # comunque un ulteriore mescolamento
+        random.shuffle(results)
         sent = 0
 
         for item in results:
-            # Identificativo unico per evitare ripetizioni
             item_id = f"{item['title']}_{item['link']}"
-
-            # Filtri contenuti
             if item_id in cache:
                 continue
             if is_banned(item['title'] + item['link']):
                 continue
             if not item['link'].lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4', '.webm')):
                 continue
-
-            # Invio
             send_media(context.bot, chat_id, item)
             cache.add(item_id)
             sent += 1
@@ -170,7 +159,6 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
         import traceback
         print(f"\n[!] Errore in send_content({mode}):\n{traceback.format_exc()}\n")
         context.bot.send_message(chat_id=chat_id, text="⚠️ Errore nel caricamento contenuti.")
-
 
 def reset_cache(update: Update, context: CallbackContext):
     for mode in CACHE_FILES:
