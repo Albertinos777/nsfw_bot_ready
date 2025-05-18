@@ -118,37 +118,45 @@ def send_to_channel(context: CallbackContext, target=None):
     try:
         cache = load_channel_cache()
         sent = 0
-        attempts = 0
+        sources = []
 
-        # Target multipli se non specificato
-        targets = [target] if target else ["realhot", "creampie", "cosplayx", "facial", "milf", "ass", "posing"]
+        # Se target specificato, pesca da solo quella fonte
+        if target == "redgifs":
+            sources = fetch_redgifs(limit=15)
+        elif target == "nudegals":
+            sources = fetch_nudegals(limit=10)
+        elif target:
+            sources = fetch_reddit(limit=30, target=target)
+        else:
+            sources = (
+                fetch_redgifs(limit=10)
+                + fetch_nudegals(limit=5)
+                + fetch_reddit(limit=10, target="realhot")
+                + fetch_reddit(limit=10, target="cosplayx")
+            )
 
-        for t in targets:
-            results = fetch_reddit(limit=100, sort=random.choice(["hot", "top", "new"]), target=t)
-            random.shuffle(results)
+        random.shuffle(sources)
 
-            for item in results:
-                item_id = f"{item['title']}_{item['link']}"
-                if item_id in cache or is_banned(item_id):
-                    continue
-                if not item['link'].lower().endswith(('.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png')):
-                    continue
+        for item in sources:
+            item_id = f"{item['title']}_{item['link']}"
+            if item_id in cache or is_banned(item_id):
+                continue
+            if not item['link'].lower().endswith(('.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png')):
+                continue
 
-                send_media(context.bot, CHANNEL_ID, item)
-                cache.add(item_id)
-                save_channel_cache(cache)
-                print(f"[✓] Inviato al canale: {item['title']}")
-                sent += 1
-                break
-
-            if sent > 0:
-                break
+            send_media(context.bot, CHANNEL_ID, item)
+            cache.add(item_id)
+            save_channel_cache(cache)
+            print(f"[✓] Inviato al canale: {item['title']}")
+            sent += 1
+            break
 
         if sent == 0:
             print("[!] Nessun contenuto nuovo trovato per il canale.")
 
     except Exception as e:
         print(f"[!] Errore invio canale: {e}")
+
 
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
@@ -352,6 +360,8 @@ def cmd_channel_push(update: Update, context: CallbackContext):
     send_to_channel(context, target="realhot")
 
 dispatcher.add_handler(CommandHandler("channelpush", cmd_channel_push))
+dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_channel(c, "redgifs")))
+dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(c, "nudegals")))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
