@@ -114,13 +114,13 @@ def save_channel_cache(cache):
     with open("cache_channel.json", "w") as f:
         json.dump(list(cache), f)
 
-def send_to_channel(context: CallbackContext, target=None):
+def send_to_channel(update: Update, context: CallbackContext, target=None):
     try:
+        chat_id = update.effective_chat.id
         cache = load_channel_cache()
         sent = 0
         sources = []
 
-        # Se target specificato, pesca da solo quella fonte
         if target == "redgifs":
             sources = fetch_redgifs(limit=15)
         elif target == "nudegals":
@@ -147,15 +147,17 @@ def send_to_channel(context: CallbackContext, target=None):
             send_media(context.bot, CHANNEL_ID, item)
             cache.add(item_id)
             save_channel_cache(cache)
-            print(f"[✓] Inviato al canale: {item['title']}")
             sent += 1
             break
 
         if sent == 0:
-            print("[!] Nessun contenuto nuovo trovato per il canale.")
+            context.bot.send_message(chat_id=chat_id, text="😐 Nessun contenuto nuovo da inviare al canale.")
+        else:
+            context.bot.send_message(chat_id=chat_id, text="✅ Contenuto inviato al canale.")
 
     except Exception as e:
         print(f"[!] Errore invio canale: {e}")
+        context.bot.send_message(chat_id=chat_id, text="❌ Errore durante l'invio al canale.")
 
 
 
