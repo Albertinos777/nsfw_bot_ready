@@ -104,20 +104,52 @@ def send_media(bot, chat_id, item):
         print(f"[!] Errore media: {e}")
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
 
-def send_to_channel(context: CallbackContext, target="realhot", limit=1):
-    try:
-        print(f"[DEBUG] Invio contenuto su canale (target: {target})...")
-        results = fetch_reddit(limit=limit, sort="hot", target=target)
-        random.shuffle(results)
+def load_channel_cache():
+    if os.path.exists("cache_channel.json"):
+        with open("cache_channel.json", "r") as f:
+            return set(json.load(f))
+    return set()
 
-        for item in results:
-            if not item['link'].lower().endswith(('.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png')):
-                continue
-            send_media(context.bot, CHANNEL_ID, item)
-            break
+def save_channel_cache(cache):
+    with open("cache_channel.json", "w") as f:
+        json.dump(list(cache), f)
+
+def send_to_channel(context: CallbackContext, target=None):
+    try:
+        cache = load_channel_cache()
+        sent = 0
+        attempts = 0
+
+        # Target multipli se non specificato
+        targets = [target] if target else ["realhot", "creampie", "cosplayx", "facial", "milf", "ass", "posing"]
+
+        for t in targets:
+            results = fetch_reddit(limit=100, sort=random.choice(["hot", "top", "new"]), target=t)
+            random.shuffle(results)
+
+            for item in results:
+                item_id = f"{item['title']}_{item['link']}"
+                if item_id in cache or is_banned(item_id):
+                    continue
+                if not item['link'].lower().endswith(('.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png')):
+                    continue
+
+                send_media(context.bot, CHANNEL_ID, item)
+                cache.add(item_id)
+                save_channel_cache(cache)
+                print(f"[✓] Inviato al canale: {item['title']}")
+                sent += 1
+                break
+
+            if sent > 0:
+                break
+
+        if sent == 0:
+            print("[!] Nessun contenuto nuovo trovato per il canale.")
 
     except Exception as e:
         print(f"[!] Errore invio canale: {e}")
+
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
     chat_id = update.effective_chat.id
