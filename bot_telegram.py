@@ -19,6 +19,7 @@ from fetcher_rule34video import fetch_rule34video
 
 TOKEN = os.environ.get("TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID"))
 
 app = Flask(__name__)
 bot = Bot(token=TOKEN)
@@ -102,6 +103,21 @@ def send_media(bot, chat_id, item):
     except Exception as e:
         print(f"[!] Errore media: {e}")
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+
+def send_to_channel(context: CallbackContext, target="realhot", limit=1):
+    try:
+        print(f"[DEBUG] Invio contenuto su canale (target: {target})...")
+        results = fetch_reddit(limit=limit, sort="hot", target=target)
+        random.shuffle(results)
+
+        for item in results:
+            if not item['link'].lower().endswith(('.mp4', '.webm', '.gif', '.jpg', '.jpeg', '.png')):
+                continue
+            send_media(context.bot, CHANNEL_ID, item)
+            break
+
+    except Exception as e:
+        print(f"[!] Errore invio canale: {e}")
 
 def send_content(update: Update, context: CallbackContext, mode="hentai"):
     chat_id = update.effective_chat.id
@@ -299,7 +315,11 @@ def get_channel_id(update: Update, context: CallbackContext):
     )
 dispatcher.add_handler(CommandHandler("getid", get_channel_id))
 
+def cmd_channel_push(update: Update, context: CallbackContext):
+    update.message.reply_text("🚀 Invio contenuto NSFW nel canale...")
+    send_to_channel(context, target="realhot")
 
+dispatcher.add_handler(CommandHandler("channelpush", cmd_channel_push))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
