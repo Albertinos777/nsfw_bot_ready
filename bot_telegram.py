@@ -292,7 +292,7 @@ dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u
 
 def get_chat_id(update: Update, context: CallbackContext):
     chat = update.effective_chat
-    context.bot.send_message(chat.id, f"📡 Il tuo chat_id è:\n`{chat.id}`", parse_mode="Markdown")
+    context.bot.send_message(chat.id, f"📡 Il tuo chat_id è:\n{chat.id}")
 
 dispatcher.add_handler(CommandHandler("getid", get_chat_id))
 
