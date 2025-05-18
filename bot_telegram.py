@@ -361,9 +361,10 @@ def cmd_channel_push(update: Update, context: CallbackContext):
     update.message.reply_text("🚀 Invio contenuto NSFW nel canale...")
     send_to_channel(context, target="realhot")
 
-dispatcher.add_handler(CommandHandler("channelpush", cmd_channel_push))
-dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_channel(c, "redgifs")))
-dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(c, "nudegals")))
+dispatcher.add_handler(CommandHandler("channelpush", lambda u, c: send_to_channel(u, c)))
+dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_channel(u, c, "redgifs")))
+dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(u, c, "nudegals")))
+
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
