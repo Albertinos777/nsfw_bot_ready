@@ -290,6 +290,13 @@ dispatcher.add_handler(CommandHandler("redgifs", lambda u, c: send_content(u, c,
 dispatcher.add_handler(CommandHandler("e621", lambda u, c: send_content(u, c, "e621")))
 dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u, c, "rule34video")))
 
+def get_chat_id(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+    context.bot.send_message(chat.id, f"📡 Il tuo chat_id è:\n`{chat.id}`", parse_mode="Markdown")
+
+dispatcher.add_handler(CommandHandler("getid", get_chat_id))
+
+
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
