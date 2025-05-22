@@ -125,6 +125,8 @@ def send_to_channel(update: Update, context: CallbackContext, target=None):
             sources = fetch_redgifs(limit=15)
         elif target == "nudegals":
             sources = fetch_nudegals(limit=10)
+        elif target == "cosplay":
+            sources = fetch_reddit(limit=10, target=target)
         elif target:
             sources = fetch_reddit(limit=30, target=target)
         else:
@@ -360,8 +362,11 @@ dispatcher.add_handler(CommandHandler("getid", get_channel_id))
 def cmd_channel_push(update: Update, context: CallbackContext):
     update.message.reply_text("🚀 Invio contenuto NSFW nel canale...")
     send_to_channel(context, target="realhot")
+    
+def send_channel_push(update: Update, context: CallbackContext):
+    send_to_channel(update, context, random.choice(["redgifs", "nudegals", "cosplay"]))
 
-dispatcher.add_handler(CommandHandler("channelpush", lambda u, c: send_to_channel(u, c)))
+dispatcher.add_handler(CommandHandler("channelpush", send_channel_push))
 dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_channel(u, c, "redgifs")))
 dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(u, c, "nudegals")))
 
