@@ -78,7 +78,7 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
 
                 if not is_valid_url(url):
                     continue
-                if tag and tag.lower() not in title:
+                if tag and tag.lower() not in title and tag.lower() not in url:
                     continue
                 if any(bad in title for bad in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
                     continue
