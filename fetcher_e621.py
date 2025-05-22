@@ -1,4 +1,3 @@
-# fetcher_e621.py
 import requests
 
 def fetch_e621(limit=10, tag="female"):
@@ -9,7 +8,9 @@ def fetch_e621(limit=10, tag="female"):
         headers = {
             "User-Agent": "nsfwbot (by user)",
         }
-        response = requests.get(url, headers=headers)
+        # Aggiunto timeout
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()  # Solleva un'eccezione per codici di stato HTTP errati
         posts = response.json().get("posts", [])
         for post in posts:
             file = post.get("file", {})
@@ -23,6 +24,11 @@ def fetch_e621(limit=10, tag="female"):
                 "thumb": link,
                 "ext": ext
             })
+    except requests.exceptions.RequestException as req_e:
+        print(f"[!] Errore di rete/HTTP e621: {req_e}")
+    except ValueError as json_e:
+        print(f"[!] Errore JSON e621: {json_e}")
     except Exception as e:
-        print(f"[!] Errore e621: {e}")
+        print(f"[!] Errore generico e621: {e}")
     return results
+
