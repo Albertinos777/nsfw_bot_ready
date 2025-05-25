@@ -17,21 +17,10 @@ reddit = praw.Reddit(
 )
 
 SUBREDDITS = {
-    "cosplay": [
-        "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"
-    ],
-    "cosplayx": [
-        "nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes",
-        "lewdcosplay", "cosplaybutts", "cosplay_babes", "realcosplaygonewild",
-        "perfectcosplay", "naughtycospics"
-    ],
-    "reddit_all": [
-        "GoneWild", "NSFW_GIF", "Creampies", "NSFW_Snapchat", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"
-    ],
-    "gif": [
-        "NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs",
-        "NSFW_Porn_GIF", "AdultGifs", "60fpsporn", "AnalGifs", "CumGifs"
-    ],
+    "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"],
+    "cosplayx": ["nsfwcosplay", "cosplaybutts", "realcosplaygonewild", "perfectcosplay", "naughtycospics"],
+    "reddit_all": ["GoneWild", "NSFW_GIF", "Creampies", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"],
+    "gif": ["NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs", "NSFW_Porn_GIF", "60fpsporn", "AnalGifs"],
     "creampie": ["Creampies", "cumsluts", "AnalGW"],
     "facial": ["facial", "cumsluts", "cumonclothes"],
     "milf": ["MilfGW", "amateur_milfs", "milf", "maturemilf"],
@@ -47,23 +36,21 @@ SUBREDDITS = {
 def is_valid_url(url):
     return any(url.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"])
 
-def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
+def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}, tag={tag}")
     results = []
-
     subreddits = SUBREDDITS.get(target, [])
     if not subreddits:
         return []
 
-    random.shuffle(subreddits)
-
-    for sub in subreddits:
+    chosen = random.sample(subreddits, min(len(subreddits), 5))
+    for sub in chosen:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
             time_filter = random.choice(["day", "week", "month", "year", "all"])
 
             if final_sort == "top":
-                posts = reddit.subreddit(sub).top(limit=limit * 2, time_filter=time_filter)
+                posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
             elif final_sort == "hot":
                 posts = reddit.subreddit(sub).hot(limit=limit * 2)
             else:
@@ -72,22 +59,21 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
             for post in posts:
                 if not post.over_18 or post.is_self:
                     continue
-
                 url = post.url.lower()
                 title = post.title.lower()
 
                 if not is_valid_url(url):
                     continue
-                if tag and tag.lower() not in title and tag.lower() not in url:
+                if tag and tag.lower() not in title:
                     continue
-                if any(bad in title for bad in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
+                if any(b in title for b in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
                     continue
 
                 results.append({
                     "title": post.title,
                     "link": post.url,
                     "thumb": post.url,
-                    "ext": post.url.split(".")[-1]
+                    "ext": post.url.split('.')[-1]
                 })
 
                 if len(results) >= limit:
@@ -96,8 +82,5 @@ def fetch_reddit(limit=30, sort=None, target="reddit_all", tag=None):
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
             continue
-
-        if len(results) >= limit:
-            break
 
     return results
