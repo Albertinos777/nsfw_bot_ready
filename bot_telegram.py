@@ -125,6 +125,8 @@ def send_to_channel(update: Update, context: CallbackContext, target=None):
             sources = fetch_redgifs(limit=15)
         elif target == "nudegals":
             sources = fetch_nudegals(limit=10)
+        elif target == "porno":
+            sources = fetch_eporner(limit=10)
         elif target == "cosplay":
             sources = fetch_reddit(limit=10, target=target)
         elif target:
@@ -305,6 +307,23 @@ def loop_worker(chat_id):
             except Exception as e:
                 print(f"[!] Loop error: {e}")
         time.sleep(3600)
+
+def auto_post_channel_worker():
+    import time
+    while True:
+        try:
+            from fetcher_eporner import fetch_eporner
+            results = fetch_eporner(limit=5)
+            for item in results:
+                bot.send_video(chat_id=CHANNEL_ID, video=item["link"], caption=item["title"][:100])
+                time.sleep(600)  # ogni 10 minuti
+        except Exception as e:
+            print(f"[!] Auto post error: {e}")
+        time.sleep(3600)
+
+# Avvia thread all'avvio
+threading.Thread(target=auto_post_channel_worker, daemon=True).start()
+
 
 def loop_on(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
