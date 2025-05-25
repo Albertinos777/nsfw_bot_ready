@@ -1,36 +1,40 @@
 import requests
 import random
-from bs4 import BeautifulSoup
 
-def fetch_eporner(limit=10, tags=["creampie", "cosplay", "milf", "facial"]):
+API_KEY = ""  # puoi anche lasciarlo vuoto
+
+def fetch_eporner(limit=10, keywords="creampie+cosplay+facial+milf"):
     print("[DEBUG] fetch_eporner()")
     results = []
-    try:
-        base_url = "https://www.eporner.com/api/v2/video/search/"
-        tag = random.choice(tags)
-        params = {
-            "query": tag,
-            "per_page": limit,
-            "thumbsize": "big",
-            "page": random.randint(1, 20),
-            "sort": "top-week",
-            "lq": "0"
-        }
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
+    page = random.randint(1, 20)
+    url = f"https://www.eporner.com/api/v2/video/search/?query={keywords}&per_page=40&page={page}&thumbsize=big&order=top-weekly"
 
-        r = requests.get(base_url, params=params, headers=headers)
-        if r.status_code == 200 and "videos" in r.json():
-            for vid in r.json()["videos"]:
-                if not vid.get("embed"):
-                    results.append({
-                        "title": vid["title"],
-                        "link": vid["default_url"],
-                        "thumb": vid["image"],
-                        "ext": "mp4"
-                    })
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        for video in data.get("videos", []):
+            video_url = video.get("embed")
+            title = video.get("title", "Video")
+            files = video.get("files", [])
+            if not files:
+                continue
+
+            file_url = files[0].get("file")
+            if not file_url or not file_url.endswith(".mp4"):
+                continue
+
+            results.append({
+                "title": title,
+                "link": file_url,
+                "thumb": video.get("default_thumb"),
+                "ext": "mp4"
+            })
+
+            if len(results) >= limit:
+                break
+
     except Exception as e:
-        print(f"[!] fetch_eporner() error: {e}")
+        print(f"[!] fetch_eporner error: {e}")
 
     return results
