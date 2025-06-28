@@ -104,24 +104,6 @@ def send_media(bot, chat_id, item):
         print(f"[!] Errore media: {e}")
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
 
-def send_only_video(update, context):
-    chat_id = update.effective_chat.id
-    sources = fetch_reddit(limit=50, sort="hot", target="realhot")
-    sources += fetch_redgifs(limit=20)
-    sources += fetch_eporner(limit=10)
-
-    random.shuffle(sources)
-
-    sent = 0
-    for item in sources:
-        if item['link'].lower().endswith(('.mp4', '.webm')):
-            send_media(context.bot, chat_id, item)
-            sent += 1
-            if sent >= 5:
-                break
-
-    if sent == 0:
-        context.bot.send_message(chat_id, "❌ Nessun video trovato.")
 
 
 def load_channel_cache():
@@ -134,6 +116,28 @@ def save_channel_cache(cache):
     with open("cache_channel.json", "w") as f:
         json.dump(list(cache), f)
 
+def send_only_video(update, context):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id, "📡 Cerco video...")
+
+    results = []
+    results += fetch_reddit(limit=50, sort="hot", target="realhot")
+    results += fetch_redgifs(limit=20)
+    results += fetch_eporner(limit=10)
+
+    if not results:
+        context.bot.send_message(chat_id, "❌ Nessun video trovato.")
+        return
+    
+    random.shuffle(results)
+    for item in results:
+        if item['link'].lower().endswith(('.mp4', '.webm')):
+            send_media(context.bot, chat_id, item)
+            break
+    else:
+        context.bot.send_message(chat_id, "❌ Nessun video trovato valido.")
+
+        
 def send_to_channel(update: Update, context: CallbackContext, target=None):
     try:
         chat_id = update.effective_chat.id
