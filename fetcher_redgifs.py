@@ -9,12 +9,18 @@ def refresh_redgifs_token():
     global REDGIFS_TOKEN, REDGIFS_LAST_REFRESH
     try:
         res = requests.post("https://api.redgifs.com/v2/auth/temporary")
+        if res.status_code != 200:
+            print(f"[ERRORE] Richiesta token RedGIFs fallita: {res.status_code}")
+            REDGIFS_TOKEN = None
+            return
         data = res.json()
         REDGIFS_TOKEN = data.get("token")
         REDGIFS_LAST_REFRESH = time.time()
         print("[INFO] Token RedGIFs aggiornato.")
     except Exception as e:
         print(f"[ERRORE] Impossibile aggiornare il token RedGIFs: {e}")
+        REDGIFS_TOKEN = None
+
 
 def fetch_redgifs(limit=10):
     global REDGIFS_TOKEN, REDGIFS_LAST_REFRESH
