@@ -439,7 +439,7 @@ def webhook():
 
 @app.route("/", methods=["GET"])
 def index():
-    print("[INFO] GET / - Uptime Check")
+    print("[INFO] GET / - Uptime Check.", flush=True)
     return "NSFW Bot attivo."
 
 if __name__ == "__main__":
