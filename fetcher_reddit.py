@@ -33,8 +33,18 @@ SUBREDDITS = {
     "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"]
 }
 
-def is_valid_url(url):
-    return any(url.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"])
+
+def is_direct_media(url):
+    valid_ext = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"]
+    return any(url.lower().endswith(ext) for ext in valid_ext)
+
+
+def sanitize_url(url):
+    url = url.lower()
+    if url.endswith(".gifv"):
+        url = url.replace(".gifv", ".mp4")
+    return url
+
 
 def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}, tag={tag}")
@@ -59,21 +69,28 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
             for post in posts:
                 if not post.over_18 or post.is_self:
                     continue
-                url = post.url.lower()
+
+                url = sanitize_url(post.url)
                 title = post.title.lower()
 
-                if not is_valid_url(url):
+                if "v.redd.it" in url:
+                    # v.redd.it spesso richiede parsare il JSON per ottenere il link mp4, possiamo ignorare o migliorare
                     continue
+
+                if not is_direct_media(url):
+                    continue
+
                 if tag and tag.lower() not in title:
                     continue
-                if any(b in title for b in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
+
+                if any(bad in title for bad in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
                     continue
 
                 results.append({
                     "title": post.title,
-                    "link": post.url,
-                    "thumb": post.url,
-                    "ext": post.url.split('.')[-1]
+                    "link": url,
+                    "thumb": url,
+                    "ext": url.split('.')[-1]
                 })
 
                 if len(results) >= limit:
@@ -81,6 +98,5 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
 
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
-            continue
 
     return results
