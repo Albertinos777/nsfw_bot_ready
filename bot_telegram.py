@@ -317,6 +317,7 @@ def random_tag(update: Update, context: CallbackContext):
 # ----- LOOP CONTROL -----
 def auto_post_worker(chat_id, interval):
     while chat_id in auto_threads:
+        print(f"[DEBUG] Auto-post attivo per chat {chat_id} - invio contenuti")
         try:
             sources = []
             sources += fetch_reddit(limit=15, sort="hot", target="realhot")
@@ -336,7 +337,8 @@ def auto_post_worker(chat_id, interval):
 
         except Exception as e:
             print(f"[!] Errore auto-post: {e}")
-
+            
+        print(f"[DEBUG] Auto-post attesa {interval} secondi per il prossimo ciclo")
         time.sleep(interval)
 
 
