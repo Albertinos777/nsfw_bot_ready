@@ -51,6 +51,7 @@ CACHE_FILES = {
 
 FAV_FILE = "favorites.json"
 auto_threads = {}
+user_loops = {}
 
 def is_direct_video(link):
     return link.lower().endswith(('.mp4', '.webm'))
@@ -401,7 +402,7 @@ dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("redgifs", lambda u, c: send_content(u, c, "redgifs")))
 dispatcher.add_handler(CommandHandler("e621", lambda u, c: send_content(u, c, "e621")))
 dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u, c, "rule34video")))
-#dispatcher.add_handler(CommandHandler("video", send_only_video))
+dispatcher.add_handler(CommandHandler("video", send_only_video))
 
 
 def get_channel_id(update: Update, context: CallbackContext):
