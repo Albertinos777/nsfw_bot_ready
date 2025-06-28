@@ -52,6 +52,9 @@ CACHE_FILES = {
 FAV_FILE = "favorites.json"
 auto_threads = {}
 
+def is_direct_video(link):
+    return link.lower().endswith(('.mp4', '.webm'))
+
 def load_cache(mode):
     if mode not in CACHE_FILES:
         return set()
@@ -207,7 +210,7 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
 
-        elif target == "redgifs":
+        elif mode == "redgifs":
             sources = fetch_redgifs(limit=15)
 
         elif mode == "porno":
@@ -398,7 +401,7 @@ dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("redgifs", lambda u, c: send_content(u, c, "redgifs")))
 dispatcher.add_handler(CommandHandler("e621", lambda u, c: send_content(u, c, "e621")))
 dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u, c, "rule34video")))
-dispatcher.add_handler(CommandHandler("video", send_only_video))
+#dispatcher.add_handler(CommandHandler("video", send_only_video))
 
 
 def get_channel_id(update: Update, context: CallbackContext):
