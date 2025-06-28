@@ -50,7 +50,7 @@ CACHE_FILES = {
 }
 
 FAV_FILE = "favorites.json"
-loop_enabled = {}
+auto_threads = {}
 
 def load_cache(mode):
     if mode not in CACHE_FILES:
@@ -103,6 +103,26 @@ def send_media(bot, chat_id, item):
     except Exception as e:
         print(f"[!] Errore media: {e}")
         bot.send_message(chat_id=chat_id, text=f"🔗 {caption}")
+
+def send_only_video(update, context):
+    chat_id = update.effective_chat.id
+    sources = fetch_reddit(limit=50, sort="hot", target="realhot")
+    sources += fetch_redgifs(limit=20)
+    sources += fetch_eporner(limit=10)
+
+    random.shuffle(sources)
+
+    sent = 0
+    for item in sources:
+        if item['link'].lower().endswith(('.mp4', '.webm')):
+            send_media(context.bot, chat_id, item)
+            sent += 1
+            if sent >= 5:
+                break
+
+    if sent == 0:
+        context.bot.send_message(chat_id, "❌ Nessun video trovato.")
+
 
 def load_channel_cache():
     if os.path.exists("cache_channel.json"):
@@ -290,51 +310,45 @@ def random_tag(update: Update, context: CallbackContext):
     update.message.reply_text("❌ Nessun risultato trovato.")
 
 # ----- LOOP CONTROL -----
-
-def loop_worker(chat_id):
-    while loop_enabled.get(chat_id, False):
-        for mode in ["hentai", "cosplay", "real", "reddit_all"]:
-            try:
-                cache = load_cache(mode)
-                results = fetch_reddit(limit=5, sort="hot", target="reddit_all", tag=mode)
-                for item in results:
-                    if item['link'] in cache or is_banned(item['title'] + item['link']):
-                        continue
-                    send_media(bot, chat_id, item)
-                    cache.add(item['link'])
-                    save_cache(mode, cache)
-                    break
-            except Exception as e:
-                print(f"[!] Loop error: {e}")
-        time.sleep(3600)
-
-def auto_post_channel_worker():
-    import time
-    while True:
+def auto_post_worker(chat_id, interval):
+    while chat_id in auto_threads:
         try:
-            from fetcher_eporner import fetch_eporner
-            results = fetch_eporner(limit=5)
-            for item in results:
-                bot.send_video(chat_id=CHANNEL_ID, video=item["link"], caption=item["title"][:100])
-                time.sleep(600)  # ogni 10 minuti
+            # Puoi aggiungere altre fonti qui
+            sources = fetch_reddit(limit=20, sort="hot", target="realhot")
+            random.shuffle(sources)
+
+            for item in sources:
+                if item['link'].lower().endswith(('.mp4', '.webm', '.jpg', '.jpeg', '.png', '.gif')):
+                    send_media(bot, chat_id, item)
+                    break
+
         except Exception as e:
-            print(f"[!] Auto post error: {e}")
-        time.sleep(3600)
+            print(f"[!] Errore auto-post: {e}")
 
-# Avvia thread all'avvio
-threading.Thread(target=auto_post_channel_worker, daemon=True).start()
+        time.sleep(interval)
 
-
-def loop_on(update: Update, context: CallbackContext):
+def start_auto_post(update, context):
     chat_id = update.effective_chat.id
-    loop_enabled[chat_id] = True
-    update.message.reply_text("🔁 Loop automatico attivato.")
-    threading.Thread(target=loop_worker, args=(chat_id,), daemon=True).start()
 
-def loop_off(update: Update, context: CallbackContext):
+    if chat_id in auto_threads and auto_threads[chat_id].is_alive():
+        update.message.reply_text("⚠️ Auto-post già attivo.")
+        return
+
+    interval = 1800  # ogni 30 minuti (modificabile)
+    thread = threading.Thread(target=auto_post_worker, args=(chat_id, interval), daemon=True)
+    auto_threads[chat_id] = thread
+    thread.start()
+
+    update.message.reply_text(f"🔁 Auto-post attivato ogni {interval // 60} minuti.")
+
+def stop_auto_post(update, context):
     chat_id = update.effective_chat.id
-    loop_enabled[chat_id] = False
-    update.message.reply_text("⛔ Loop disattivato.")
+
+    if chat_id in auto_threads:
+        del auto_threads[chat_id]
+        update.message.reply_text("⛔ Auto-post disattivato.")
+    else:
+        update.message.reply_text("ℹ️ Nessun auto-post attivo per questo chat.")
 
 # ----- DISPATCH -----
 
@@ -362,12 +376,14 @@ dispatcher.add_handler(CommandHandler("audio", send_audio))
 dispatcher.add_handler(CommandHandler("fav", add_fav))
 dispatcher.add_handler(CommandHandler("favorites", list_fav))
 dispatcher.add_handler(CommandHandler("random", random_tag))
-dispatcher.add_handler(CommandHandler("loopon", loop_on))
-dispatcher.add_handler(CommandHandler("loopoff", loop_off))
+dispatcher.add_handler(CommandHandler("autoposton", start_auto_post))
+dispatcher.add_handler(CommandHandler("autopostoff", stop_auto_post))
 dispatcher.add_handler(CommandHandler("resetcache", reset_cache))
 dispatcher.add_handler(CommandHandler("redgifs", lambda u, c: send_content(u, c, "redgifs")))
 dispatcher.add_handler(CommandHandler("e621", lambda u, c: send_content(u, c, "e621")))
 dispatcher.add_handler(CommandHandler("rule34video", lambda u, c: send_content(u, c, "rule34video")))
+dispatcher.add_handler(CommandHandler("video", send_only_video))
+
 
 def get_channel_id(update: Update, context: CallbackContext):
     chat = update.effective_chat
@@ -388,6 +404,20 @@ def send_channel_push(update: Update, context: CallbackContext):
 dispatcher.add_handler(CommandHandler("channelpush", send_channel_push))
 dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_channel(u, c, "redgifs")))
 dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(u, c, "nudegals")))
+
+
+def auto_post_user_worker(chat_id, interval=1800):
+    while True:
+        try:
+            sources = fetch_reddit(limit=20, sort="hot", target="realhot")
+            random.shuffle(sources)
+            for item in sources:
+                if is_direct_video(item['link']):
+                    send_media(bot, chat_id, item)
+                    break
+        except Exception as e:
+            print(f"[!] Auto user post error: {e}")
+        time.sleep(interval)
 
 
 @app.route(f"/{TOKEN}", methods=["POST"])
