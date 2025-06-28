@@ -10,35 +10,35 @@ def refresh_redgifs_token():
     global REDGIFS_TOKEN, REDGIFS_LAST_REFRESH
     try:
         res = requests.post("https://api.redgifs.com/v2/auth/temporary")
+        res.raise_for_status()
         data = res.json()
         REDGIFS_TOKEN = data.get("token")
         REDGIFS_LAST_REFRESH = time.time()
-        print(f"[INFO] RedGIFs token aggiornato.")
+        print(f"[INFO] Token RedGIFs aggiornato.")
     except Exception as e:
         print(f"[!] Errore aggiornamento token RedGIFs: {e}")
+        REDGIFS_TOKEN = None
 
 
 def fetch_redgifs(limit=10):
     global REDGIFS_TOKEN, REDGIFS_LAST_REFRESH
 
-    # Controlla se il token va aggiornato (dopo 6 ore)
-    if not REDGIFS_TOKEN or (time.time() - REDGIFS_LAST_REFRESH > 6 * 3600):
+    if not REDGIFS_TOKEN or (time.time() - REDGIFS_LAST_REFRESH > 5 * 3600):
         refresh_redgifs_token()
         if not REDGIFS_TOKEN:
             print("[!] Token RedGIFs non disponibile.")
             return []
 
-    print("[DEBUG] fetch_redgifs()")
+    print("[DEBUG] Fetch RedGIFs attivo.")
     results = []
 
     try:
-        for _ in range(limit * 3):  # Più tentativi per trovare contenuti validi
+        for _ in range(limit * 3):
             tag = random.choice(["nsfw", "creampie", "cosplay", "facial", "milf", "blowjob", "ass", "public"])
-            url = f"https://api.redgifs.com/v2/gifs/search?search_text={tag}&order=trending&count=100"
+            url = f"https://api.redgifs.com/v2/gifs/search?search_text={tag}&order=trending&count=50"
 
             headers = {"Authorization": f"Bearer {REDGIFS_TOKEN}"}
             r = requests.get(url, headers=headers)
-
             if not r.ok:
                 print(f"[!] RedGIFs richiesta fallita: {r.status_code}")
                 continue
@@ -60,6 +60,6 @@ def fetch_redgifs(limit=10):
                 break
 
     except Exception as e:
-        print(f"[!] RedGIFs fetch error: {e}")
+        print(f"[!] RedGIFs errore fetch: {e}")
 
     return results
