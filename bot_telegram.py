@@ -428,20 +428,6 @@ dispatcher.add_handler(CommandHandler("channelredgifs", lambda u, c: send_to_cha
 dispatcher.add_handler(CommandHandler("channelnudegals", lambda u, c: send_to_channel(u, c, "nudegals")))
 
 
-def auto_post_user_worker(chat_id, interval=1800):
-    while True:
-        try:
-            sources = fetch_reddit(limit=20, sort="hot", target="realhot")
-            random.shuffle(sources)
-            for item in sources:
-                if is_direct_video(item['link']):
-                    send_media(bot, chat_id, item)
-                    break
-        except Exception as e:
-            print(f"[!] Auto user post error: {e}")
-        time.sleep(interval)
-
-
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
@@ -456,7 +442,10 @@ def index():
 if __name__ == "__main__":
     print("[INFO] Terminazione thread residui in avvio...")
     stop_all_threads = True
-    time.sleep(2)  # Breve attesa per sicurezza
+    auto_threads.clear()
+    active_threads.clear()
+    time.sleep(2)
     stop_all_threads = False
+    print("[INFO] Ripulito, avvio server.")
     app.run(host="0.0.0.0", port=10000)
 
