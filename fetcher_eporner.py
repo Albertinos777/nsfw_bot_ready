@@ -1,8 +1,6 @@
 import requests
 import random
 
-API_KEY = ""  # puoi anche lasciarlo vuoto
-
 def fetch_eporner(limit=10, keywords="creampie+cosplay+facial+milf"):
     print("[DEBUG] fetch_eporner()")
     results = []
@@ -11,17 +9,21 @@ def fetch_eporner(limit=10, keywords="creampie+cosplay+facial+milf"):
 
     try:
         response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
 
         for video in data.get("videos", []):
-            video_url = video.get("embed")
             title = video.get("title", "Video")
             files = video.get("files", [])
-            if not files:
-                continue
 
-            file_url = files[0].get("file")
-            if not file_url or not file_url.endswith(".mp4"):
+            # Cerco il file mp4 migliore disponibile
+            file_url = None
+            for f in files:
+                if f.get("file", "").endswith(".mp4"):
+                    file_url = f.get("file")
+                    break
+
+            if not file_url:
                 continue
 
             results.append({
