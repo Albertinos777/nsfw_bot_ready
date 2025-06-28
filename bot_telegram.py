@@ -51,7 +51,8 @@ CACHE_FILES = {
 
 FAV_FILE = "favorites.json"
 auto_threads = {}
-user_loops = {}
+active_threads = {}
+stop_all_threads = False
 
 def is_direct_video(link):
     return link.lower().endswith(('.mp4', '.webm'))
@@ -320,7 +321,8 @@ def random_tag(update: Update, context: CallbackContext):
 
 # ----- LOOP CONTROL -----
 def auto_post_worker(chat_id, interval):
-    while chat_id in auto_threads:
+    global stop_all_threads
+    while not stop_all_threads and chat_id in auto_threads:
         print(f"[DEBUG] Auto-post attivo per chat {chat_id} - invio contenuti")
         try:
             sources = []
@@ -452,4 +454,9 @@ def index():
     return "NSFW Bot attivo."
 
 if __name__ == "__main__":
+    print("[INFO] Terminazione thread residui in avvio...")
+    stop_all_threads = True
+    time.sleep(2)  # Breve attesa per sicurezza
+    stop_all_threads = False
     app.run(host="0.0.0.0", port=10000)
+
