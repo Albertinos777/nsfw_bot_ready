@@ -313,19 +313,27 @@ def random_tag(update: Update, context: CallbackContext):
 def auto_post_worker(chat_id, interval):
     while chat_id in auto_threads:
         try:
-            # Puoi aggiungere altre fonti qui
-            sources = fetch_reddit(limit=20, sort="hot", target="realhot")
+            sources = []
+            sources += fetch_reddit(limit=10, sort="hot", target="realhot")
+            sources += fetch_reddit(limit=10, sort="hot", target="cosplayx")
+            sources += fetch_redgifs(limit=10)
+            sources += fetch_eporner(limit=10)  # solo se il fetch_eporner è funzionante
+
             random.shuffle(sources)
 
+            sent = 0
             for item in sources:
                 if item['link'].lower().endswith(('.mp4', '.webm', '.jpg', '.jpeg', '.png', '.gif')):
                     send_media(bot, chat_id, item)
+                    sent += 1
+                if sent >= 10:  # Numero di contenuti inviati ogni ciclo (modificabile)
                     break
 
         except Exception as e:
             print(f"[!] Errore auto-post: {e}")
 
         time.sleep(interval)
+
 
 def start_auto_post(update, context):
     chat_id = update.effective_chat.id
@@ -334,7 +342,7 @@ def start_auto_post(update, context):
         update.message.reply_text("⚠️ Auto-post già attivo.")
         return
 
-    interval = 1800  # ogni 30 minuti (modificabile)
+    interval = 900  # ogni 30 minuti (modificabile)
     thread = threading.Thread(target=auto_post_worker, args=(chat_id, interval), daemon=True)
     auto_threads[chat_id] = thread
     thread.start()
