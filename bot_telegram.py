@@ -207,8 +207,11 @@ def send_content(update: Update, context: CallbackContext, mode="hentai"):
             results += fetch_nhentai(limit=20)
             results += fetch_rule34(limit=20)
 
+        elif target == "redgifs":
+            sources = fetch_redgifs(limit=15)
+
         elif mode == "porno":
-            results += fetch_nudegals(limit=10)
+            results += fetch_eporner(limit=10)
 
         elif mode == "manhwa":
             results += fetch_manhwa(limit=20)
