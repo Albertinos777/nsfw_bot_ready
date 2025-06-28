@@ -125,17 +125,15 @@ def send_only_video(update, context):
     results += fetch_redgifs(limit=20)
     results += fetch_eporner(limit=10)
 
-    if not results:
+    valid_videos = [item for item in results if item['link'].lower().endswith(('.mp4', '.webm'))]
+
+    if not valid_videos:
         context.bot.send_message(chat_id, "❌ Nessun video trovato.")
         return
-    
-    random.shuffle(results)
-    for item in results:
-        if item['link'].lower().endswith(('.mp4', '.webm')):
-            send_media(context.bot, chat_id, item)
-            break
-    else:
-        context.bot.send_message(chat_id, "❌ Nessun video trovato valido.")
+
+    random.shuffle(valid_videos)
+    for item in valid_videos[:5]:
+        send_media(context.bot, chat_id, item)
 
         
 def send_to_channel(update: Update, context: CallbackContext, target=None):
@@ -318,10 +316,10 @@ def auto_post_worker(chat_id, interval):
     while chat_id in auto_threads:
         try:
             sources = []
-            sources += fetch_reddit(limit=10, sort="hot", target="realhot")
-            sources += fetch_reddit(limit=10, sort="hot", target="cosplayx")
-            sources += fetch_redgifs(limit=10)
-            sources += fetch_eporner(limit=10)  # solo se il fetch_eporner è funzionante
+            sources += fetch_reddit(limit=15, sort="hot", target="realhot")
+            sources += fetch_reddit(limit=15, sort="hot", target="cosplayx")
+            sources += fetch_redgifs(limit=15)
+            sources += fetch_eporner(limit=10)
 
             random.shuffle(sources)
 
@@ -330,7 +328,7 @@ def auto_post_worker(chat_id, interval):
                 if item['link'].lower().endswith(('.mp4', '.webm', '.jpg', '.jpeg', '.png', '.gif')):
                     send_media(bot, chat_id, item)
                     sent += 1
-                if sent >= 10:  # Numero di contenuti inviati ogni ciclo (modificabile)
+                if sent >= 10:
                     break
 
         except Exception as e:
@@ -346,12 +344,13 @@ def start_auto_post(update, context):
         update.message.reply_text("⚠️ Auto-post già attivo.")
         return
 
-    interval = 900  # ogni 30 minuti (modificabile)
+    interval = 900  # ogni 15 minuti
     thread = threading.Thread(target=auto_post_worker, args=(chat_id, interval), daemon=True)
     auto_threads[chat_id] = thread
     thread.start()
 
-    update.message.reply_text(f"🔁 Auto-post attivato ogni {interval // 60} minuti.")
+    update.message.reply_text(f"🔁 Auto-post attivato ogni {interval // 60} minuti con più tipi di contenuti.")
+
 
 def stop_auto_post(update, context):
     chat_id = update.effective_chat.id
