@@ -23,7 +23,6 @@ WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID"))
 
 app = Flask(__name__)
-bot = Bot(token=TOKEN)
 application = Application.builder().token(TOKEN).build()
 
 CACHE_FILES = {
@@ -259,7 +258,7 @@ async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), bot)
+    update = Update.de_json(request.get_json(force=True), application.bot)
     asyncio.run(application.process_update(update))
     return "OK"
 
@@ -301,8 +300,8 @@ if __name__ == "__main__":
     import asyncio
 
     async def init():
-        await application.initialize()
-        await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+    await application.initialize()
+    await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
     asyncio.run(init())
     app.run(host="0.0.0.0", port=10000)
