@@ -4,6 +4,7 @@ import threading
 import time
 import random
 import asyncio
+import telegram
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.constants import ParseMode
