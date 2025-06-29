@@ -3,4 +3,4 @@ beautifulsoup4
 praw
 Flask
 python-dotenv
-python-telegram-bot==20.8
+python-telegram-bot==13.15
