@@ -298,5 +298,11 @@ application.add_handler(CommandHandler("random", random_tag))
 application.add_handler(CommandHandler("resetcache", reset_cache))
 
 if __name__ == "__main__":
-    asyncio.run(application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}"))
+    import asyncio
+
+    async def init():
+        await application.initialize()
+        await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+
+    asyncio.run(init())
     app.run(host="0.0.0.0", port=10000)
