@@ -1,6 +1,6 @@
 requests
 beautifulsoup4
 praw
-python-telegram-bot==20.8
 Flask
 python-dotenv
+python-telegram-bot==20.8
