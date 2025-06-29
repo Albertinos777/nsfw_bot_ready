@@ -256,11 +256,21 @@ async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Nessun auto-post attivo.")
 
-@app.route(f"/{TOKEN}", methods=["POST"])
+@app.route(f'/{TOKEN}', methods=["POST"])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    asyncio.run(application.process_update(update))
-    return "OK"
+    from flask import request
+
+    # Ottieni i dati dell'update
+    update = telegram.Update.de_json(request.get_json(force=True), application.bot)
+
+    # Prendi l'event loop attivo, lo stesso che abbiamo impostato nel main
+    loop = asyncio.get_event_loop()
+
+    # Crea un task asincrono per processare l'update
+    loop.create_task(application.process_update(update))
+
+    return "OK", 200
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -303,5 +313,12 @@ if __name__ == "__main__":
         await application.initialize()
         await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
-    asyncio.run(init())
+    # Ottieni l'event loop corrente o ne crea uno nuovo
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Esegui l'inizializzazione ma senza chiudere il loop globale
+    loop.run_until_complete(init())
+
+    # Avvia Flask, che gira in parallelo, mantenendo il loop aperto
     app.run(host="0.0.0.0", port=10000)
