@@ -259,18 +259,12 @@ async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @app.route(f'/{TOKEN}', methods=["POST"])
 def webhook():
-    from flask import request
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(application.process_update(update))
+    return "OK"
 
-    # Ottieni i dati dell'update
-    update = telegram.Update.de_json(request.get_json(force=True), application.bot)
-
-    # Prendi l'event loop attivo, lo stesso che abbiamo impostato nel main
-    loop = asyncio.get_event_loop()
-
-    # Crea un task asincrono per processare l'update
-    loop.create_task(application.process_update(update))
-
-    return "OK", 200
 
 
 @app.route("/", methods=["GET"])
