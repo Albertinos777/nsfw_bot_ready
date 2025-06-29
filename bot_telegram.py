@@ -260,7 +260,7 @@ async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
-    asyncio.create_task(application.process_update(update))
+    asyncio.run(application.process_update(update))
     return "OK"
 
 @app.route("/", methods=["GET"])
