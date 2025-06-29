@@ -53,7 +53,6 @@ CACHE_FILES = {
 FAV_FILE = "favorites.json"
 CHANNEL_CACHE_FILE = "cache_channel.json"
 auto_threads = {}
-stop_all_threads = False
 
 # Cache helpers
 def load_cache(mode):
@@ -214,8 +213,7 @@ async def send_video_pack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for item in valid[:5]:
         await send_media(context, update.effective_chat.id, item)
 
-# Auto-post
-async def auto_post_worker(chat_id, interval, context: ContextTypes.DEFAULT_TYPE):
+async def auto_post_worker(chat_id, interval, application):
     while chat_id in auto_threads:
         try:
             results = []
@@ -230,7 +228,7 @@ async def auto_post_worker(chat_id, interval, context: ContextTypes.DEFAULT_TYPE
                 if is_banned(item['title'] + item['link']):
                     continue
                 if item['link'].lower().endswith((".mp4", ".webm", ".jpg", ".jpeg", ".png", ".gif")):
-                    await send_media(context, chat_id, item)
+                    await application.bot.send_message(chat_id, text=item['link'])
                     sent += 1
                 if sent >= 10:
                     break
@@ -245,31 +243,30 @@ async def start_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Auto-post già attivo.")
         return
 
-    thread = threading.Thread(target=lambda: asyncio.run(auto_post_worker(chat_id, 900, context)), daemon=True)
-    auto_threads[chat_id] = thread
-    thread.start()
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(auto_post_worker(chat_id, 900, context.application))
+    auto_threads[chat_id] = task
     await update.message.reply_text("Auto-post attivato ogni 15 minuti.")
 
 async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     if chat_id in auto_threads:
+        auto_threads[chat_id].cancel()
         del auto_threads[chat_id]
         await update.message.reply_text("Auto-post disattivato.")
     else:
         await update.message.reply_text("Nessun auto-post attivo.")
 
-# Flask Webhook
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
-    application.update_queue.put_nowait(update)
+    application.process_update(update)
     return "OK"
 
 @app.route("/", methods=["GET"])
 def index():
     return "Bot NSFW attivo."
 
-# Command registration
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("hentai", lambda u, c: send_content(u, c, "hentai")))
 application.add_handler(CommandHandler("cosplay", lambda u, c: send_content(u, c, "cosplay")))
