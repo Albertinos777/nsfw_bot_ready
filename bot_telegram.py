@@ -300,8 +300,8 @@ if __name__ == "__main__":
     import asyncio
 
     async def init():
-    await application.initialize()
-    await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+        await application.initialize()
+        await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
     asyncio.run(init())
     app.run(host="0.0.0.0", port=10000)
