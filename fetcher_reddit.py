@@ -1,12 +1,19 @@
 import os
 import random
 import praw
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
+# THREADPOOL per evitare problemi col bot
+executor = ThreadPoolExecutor()
+
+# Caricamento credenziali da variabili ambiente
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET")
 REDDIT_USERNAME = os.environ.get("REDDIT_USERNAME")
 REDDIT_PASSWORD = os.environ.get("REDDIT_PASSWORD")
 
+# Configurazione PRAW
 reddit = praw.Reddit(
     client_id=REDDIT_CLIENT_ID,
     client_secret=REDDIT_CLIENT_SECRET,
@@ -16,6 +23,7 @@ reddit = praw.Reddit(
     check_for_async=False
 )
 
+# Lista subreddit
 SUBREDDITS = {
     "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"],
     "cosplayx": ["nsfwcosplay", "cosplaybutts", "realcosplaygonewild", "perfectcosplay", "naughtycospics"],
@@ -33,27 +41,28 @@ SUBREDDITS = {
     "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"]
 }
 
+# Filtri
 BANNED_WORDS = ["futanari", "gay", "yaoi", "trap", "dickgirl", "svg", "tiff", "dick", "dickpick"]
 
-
+# Controlla se URL è diretto
 def is_direct_media(url):
     valid_ext = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"]
     return any(url.lower().endswith(ext) for ext in valid_ext)
 
-
+# Converte gifv in mp4
 def sanitize_url(url):
     url = url.lower()
     if url.endswith(".gifv"):
         url = url.replace(".gifv", ".mp4")
     return url
 
-
-def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
-    print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}, tag={tag}")
+# FUNZIONE BLOCCANTE da eseguire in thread separato
+def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
+    print(f"[DEBUG] fetch_reddit_sync() target={target}, sort={sort}, tag={tag}")
     results = []
     subreddits = SUBREDDITS.get(target, [])
-    
     if not subreddits:
+        print("[DEBUG] Nessun subreddit trovato per questo target.")
         return []
 
     chosen = random.sample(subreddits, min(len(subreddits), 5))
@@ -77,10 +86,8 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
                 url = sanitize_url(post.url)
                 title = post.title.lower()
 
-                if "v.redd.it" in url:
-                    # Miglioramento: ignora solo se non è un link diretto a video
-                    if not url.endswith((".mp4", ".webm")):
-                        continue
+                if "v.redd.it" in url and not url.endswith((".mp4", ".webm")):
+                    continue
 
                 if not is_direct_media(url):
                     continue
@@ -104,5 +111,10 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
 
-    print(f"[DEBUG] fetch_reddit() found {len(results)} results.")
+    print(f"[DEBUG] fetch_reddit_sync() trovati {len(results)} risultati.")
     return results
+
+# Versione ASYNC per il bot
+async def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, fetch_reddit_sync, limit, sort, target, tag)
