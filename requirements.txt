@@ -4,3 +4,4 @@ praw
 python-dotenv
 python-telegram-bot>=20.7
 Flask
+hypercorn
