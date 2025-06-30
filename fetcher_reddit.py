@@ -33,6 +33,8 @@ SUBREDDITS = {
     "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"]
 }
 
+BANNED_WORDS = ["futanari", "gay", "yaoi", "trap", "dickgirl", "svg", "tiff", "dick", "dickpick"]
+
 
 def is_direct_media(url):
     valid_ext = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"]
@@ -50,10 +52,12 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit() target={target}, sort={sort}, tag={tag}")
     results = []
     subreddits = SUBREDDITS.get(target, [])
+    
     if not subreddits:
         return []
 
     chosen = random.sample(subreddits, min(len(subreddits), 5))
+
     for sub in chosen:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
@@ -74,16 +78,17 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
                 title = post.title.lower()
 
                 if "v.redd.it" in url:
-                    # v.redd.it spesso richiede parsare il JSON per ottenere il link mp4, possiamo ignorare o migliorare
-                    continue
+                    # Miglioramento: ignora solo se non è un link diretto a video
+                    if not url.endswith((".mp4", ".webm")):
+                        continue
 
                 if not is_direct_media(url):
                     continue
 
-                if tag and tag.lower() not in title:
+                if any(bad in title for bad in BANNED_WORDS):
                     continue
 
-                if any(bad in title for bad in ["futanari", "gay", "yaoi", "trap", "dickgirl"]):
+                if tag and tag.lower() not in title:
                     continue
 
                 results.append({
@@ -99,4 +104,5 @@ def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
         except Exception as e:
             print(f"[!] Reddit error in {sub}: {e}")
 
+    print(f"[DEBUG] fetch_reddit() found {len(results)} results.")
     return results
