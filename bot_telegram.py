@@ -323,22 +323,21 @@ application.add_handler(CommandHandler("random", random_tag))
 application.add_handler(CommandHandler("resetcache", reset_cache))
 
 if __name__ == "__main__":
-    import threading
+    import asyncio
 
-    async def setup():
+    async def main():
         await application.initialize()
         await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
         print("[OK] Webhook impostato correttamente.")
+        
+        # Flask dentro al loop principale
+        from hypercorn.asyncio import serve
+        from hypercorn.config import Config
+        
+        config = Config()
+        config.bind = ["0.0.0.0:10000"]
+        
+        print("[INFO] Avvio Flask + Hypercorn...")
+        await serve(app, config)
 
-    # Creiamo un thread separato per l'event loop del bot
-    def telegram_thread():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(setup())
-        loop.run_forever()
-
-    threading.Thread(target=telegram_thread, daemon=True).start()
-
-    print("[INFO] Avvio Flask su 0.0.0.0:10000")
-    app.run(host="0.0.0.0", port=10000)
-
+    asyncio.run(main())
