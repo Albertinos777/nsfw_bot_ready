@@ -323,9 +323,22 @@ application.add_handler(CommandHandler("random", random_tag))
 application.add_handler(CommandHandler("resetcache", reset_cache))
 
 if __name__ == "__main__":
-    async def init():
+    import threading
+
+    async def setup():
         await application.initialize()
         await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
+        print("[OK] Webhook impostato correttamente.")
 
-    asyncio.run(init())
+    # Creiamo un thread separato per l'event loop del bot
+    def telegram_thread():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(setup())
+        loop.run_forever()
+
+    threading.Thread(target=telegram_thread, daemon=True).start()
+
+    print("[INFO] Avvio Flask su 0.0.0.0:10000")
     app.run(host="0.0.0.0", port=10000)
+
