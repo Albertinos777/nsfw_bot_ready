@@ -59,7 +59,7 @@ def load_cache(mode):
     try:
         with open(CACHE_FILES.get(mode, ""), "r") as f:
             return set(json.load(f))
-    except:
+    except Exception:
         return set()
 
 def save_cache(mode, cache):
@@ -144,20 +144,24 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
     random.shuffle(results)
     cache = load_cache(mode)
     sent = 0
-
+    
     for item in results:
         item_id = f"{item['title']}_{item['link']}"
+    
         if item_id in cache or is_banned(item['title'] + item['link']):
             continue
+    
         await send_media(context, update.effective_chat.id, item)
         cache.add(item_id)
         sent += 1
+    
         if sent >= 10:
             break
-
+    
     save_cache(mode, cache)
+    
     if sent == 0:
-        await update.message.reply_text("Nessun nuovo contenuto trovato.")
+        await update.message.reply_text("Nessun nuovo contenuto trovato o tutti già inviati.")
 
 async def add_fav(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -179,9 +183,16 @@ async def random_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text("Esempio: /random creampie")
         return
+
     tag = context.args[0].lower()
+
+    if is_banned(tag):
+        await update.message.reply_text("Tag non consentito.")
+        return
+
     cache = load_cache("reddit_all")
     results = fetch_reddit(50, "reddit_all", tag=tag)
+
     for item in results:
         if tag not in item['title'].lower() or item['link'] in cache:
             continue
@@ -189,6 +200,7 @@ async def random_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cache.add(item['link'])
         save_cache("reddit_all", cache)
         return
+
     await update.message.reply_text("Nessun risultato trovato.")
 
 async def reset_cache(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -260,8 +272,17 @@ async def stop_auto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @app.route(f'/{TOKEN}', methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    if loop.is_closed():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     loop.run_until_complete(application.process_update(update))
     return "OK"
 
@@ -302,18 +323,9 @@ application.add_handler(CommandHandler("random", random_tag))
 application.add_handler(CommandHandler("resetcache", reset_cache))
 
 if __name__ == "__main__":
-    import asyncio
-
     async def init():
         await application.initialize()
         await application.bot.set_webhook(url=f"{WEBHOOK_URL}/{TOKEN}")
 
-    # Ottieni l'event loop corrente o ne crea uno nuovo
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    # Esegui l'inizializzazione ma senza chiudere il loop globale
-    loop.run_until_complete(init())
-
-    # Avvia Flask, che gira in parallelo, mantenendo il loop aperto
+    asyncio.run(init())
     app.run(host="0.0.0.0", port=10000)
