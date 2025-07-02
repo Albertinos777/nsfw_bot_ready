@@ -125,7 +125,7 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
         if mode == "hentai":
             results += fetch_nhentai(20)
             results += fetch_rule34(20)
-        elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"]:
+        elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all", "video"]:
             results += await fetch_reddit(limit=100, target=mode)
         elif mode == "real":
             results += await fetch_reddit(50, "realhot")
@@ -160,6 +160,13 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
             ext = item["ext"].lower()
             link = item["link"]
             caption = item["title"]
+            
+            if mode == "video" and ext not in ["mp4", "webm"]:
+                continue  # Solo video nella categoria video
+
+            # Solo gif o video per la categoria gif
+            if mode == "gif" and ext not in ["gif", "mp4", "webm"]:
+                continue
 
             if ext in ["jpg", "jpeg", "png"]:
                 await context.bot.send_photo(chat_id=update.effective_chat.id, photo=link, caption=caption)
