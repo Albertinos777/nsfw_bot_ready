@@ -70,10 +70,9 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
         print("[DEBUG] Nessun subreddit definito per questo target.")
         return []
 
-    chosen = random.sample(subreddits, min(len(subreddits), 5))
-    print(f"[DEBUG] Subreddit scelti: {chosen}")
+    random.shuffle(subreddits)  # Mescola per varietà
 
-    for sub in chosen:
+    for sub in subreddits:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
             time_filter = random.choice(["day", "week", "month", "year", "all"])
@@ -115,9 +114,13 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 if len(results) >= limit:
                     break
 
+            if len(results) >= limit:
+                break  # Stop appena raggiungi il limite
+
         except Exception as e:
             print(f"[!] Errore su subreddit {sub}: {e}")
 
+    random.shuffle(results)  # Mescola i risultati finali per varietà
     print(f"[DEBUG] fetch_reddit_sync() ha trovato {len(results)} risultati.")
     return results
 
