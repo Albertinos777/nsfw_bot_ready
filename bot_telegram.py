@@ -120,46 +120,68 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
     await update.message.reply_text(f"Cerco contenuti per /{mode}...")
 
     results = []
-    if mode == "hentai":
-        results += fetch_nhentai(20)
-        results += fetch_rule34(20)
-    elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"]:
-        results += await fetch_reddit(limit=100, target=mode, tag=mode)
-    elif mode == "real":
-        results += await fetch_reddit(50, "realhot")
-    elif mode == "porno":
-        results += fetch_eporner(20)
-    elif mode == "manhwa":
-        results += fetch_manhwa(20)
-    elif mode == "redgifs":
-        results += fetch_redgifs(20)
-    elif mode == "e621":
-        results += fetch_e621(20)
-    elif mode == "rule34video":
-        results += fetch_rule34video(20)
-    else:
-        await update.message.reply_text("Comando non valido.")
+
+    try:
+        if mode == "hentai":
+            results += fetch_nhentai(20)
+            results += fetch_rule34(20)
+        elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"]:
+            results += await fetch_reddit(limit=100, target=mode)
+        elif mode == "real":
+            results += await fetch_reddit(50, "realhot")
+        elif mode == "porno":
+            results += fetch_eporner(20)
+        elif mode == "manhwa":
+            results += fetch_manhwa(20)
+        elif mode == "redgifs":
+            results += fetch_redgifs(20)
+        elif mode == "e621":
+            results += fetch_e621(20)
+        elif mode == "rule34video":
+            results += fetch_rule34video(20)
+        else:
+            await update.message.reply_text("Comando non valido.")
+            return
+    except Exception as e:
+        print(f"[!] Errore fetch contenuti: {e}")
+        await update.message.reply_text("Errore durante la ricerca dei contenuti.")
         return
 
     random.shuffle(results)
     cache = load_cache(mode)
     sent = 0
-    
+
     for item in results:
-        item_id = f"{item['title']}_{item['link']}"
-    
-        if item_id in cache or is_banned(item['title'] + item['link']):
-            continue
-    
-        await send_media(context, update.effective_chat.id, item)
-        cache.add(item_id)
-        sent += 1
-    
-        if sent >= 10:
-            break
-    
+        try:
+            item_id = f"{item['title']}_{item['link']}"
+            if item_id in cache or is_banned(item['title'] + item['link']):
+                continue
+
+            ext = item["ext"].lower()
+            link = item["link"]
+            caption = item["title"]
+
+            if ext in ["jpg", "jpeg", "png"]:
+                await context.bot.send_photo(chat_id=update.effective_chat.id, photo=link, caption=caption)
+            elif ext == "gif":
+                await context.bot.send_animation(chat_id=update.effective_chat.id, animation=link, caption=caption)
+            elif ext in ["mp4", "webm"]:
+                await context.bot.send_video(chat_id=update.effective_chat.id, video=link, caption=caption)
+            else:
+                print(f"[DEBUG] Estensione non gestita: {ext}")
+                continue
+
+            cache.add(item_id)
+            sent += 1
+
+            if sent >= 10:
+                break
+
+        except Exception as e:
+            print(f"[!] Errore invio media: {e}")
+
     save_cache(mode, cache)
-    
+
     if sent == 0:
         await update.message.reply_text("Nessun nuovo contenuto trovato o tutti già inviati.")
 
