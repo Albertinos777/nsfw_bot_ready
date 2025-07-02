@@ -93,18 +93,11 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
 
                 # v.redd.it con anteprima mp4
                 if "v.redd.it" in url:
-                    if post.media and "reddit_video" in post.media:
-                        video_url = post.media["reddit_video"].get("fallback_url", "")
-                        if video_url.endswith(".mp4"):
-                            results.append({
-                                "title": post.title,
-                                "link": video_url,
-                                "thumb": post.thumbnail if post.thumbnail and post.thumbnail != "default" else None,
-                                "ext": "mp4"
-                            })
-                            if len(results) >= limit:
-                                break
-                    continue  # Salta quelli senza fallback_url
+                    try:
+                        reddit_video_url = post.media["reddit_video"]["fallback_url"]
+                        url = reddit_video_url
+                    except (KeyError, TypeError):
+                        continue
 
                 if not is_direct_media(url):
                     continue
