@@ -159,7 +159,7 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
 
             ext = item["ext"].lower()
             link = item["link"]
-            caption = item["title"]
+            caption = f"{item['title']}\n{link}"
             
             if mode == "video" and ext not in ["mp4", "webm"]:
                 continue  # Solo video nella categoria video
@@ -177,9 +177,6 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
             else:
                 print(f"[DEBUG] Estensione non gestita: {ext}")
                 continue
-
-             # Invia link separato sotto
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=link)
 
             cache.add(item_id)
             sent += 1
