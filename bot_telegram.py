@@ -97,21 +97,24 @@ def is_banned(text):
     return any(b in text.lower() for b in banned)
 
 # Send content
-async def send_media(context: ContextTypes.DEFAULT_TYPE, chat_id, item):
-    link = item["link"]
-    caption = f"{item['title'][:100]}\n🔗 {link}"
-
+async def send_media(context, chat_id, item):
     try:
-        if link.lower().endswith((".mp4", ".webm")):
-            await context.bot.send_video(chat_id, link, caption=caption)
-        elif link.lower().endswith((".gif")):
-            await context.bot.send_animation(chat_id, link, caption=caption)
-        elif link.lower().endswith((".jpg", ".jpeg", ".png")):
-            await context.bot.send_photo(chat_id, link, caption=caption)
+        ext = item.get("ext", "").lower()
+        title = item.get("title", "")
+        url = item.get("link")
+
+        if ext in ["jpg", "jpeg", "png"]:
+            await context.bot.send_photo(chat_id, url, caption=title)
+        elif ext in ["mp4", "webm"]:
+            await context.bot.send_video(chat_id, url, caption=title)
+        elif ext in ["gif"]:
+            await context.bot.send_animation(chat_id, url, caption=title)
         else:
-            await context.bot.send_document(chat_id, link, caption=caption)
+            # Se non è riconosciuto prova a inviare link testuale
+            await context.bot.send_message(chat_id, f"{title}\n{url}")
+
     except Exception as e:
-        await context.bot.send_message(chat_id, f"Errore invio: {e}")
+        print(f"Errore invio: {e}")
 
 # Command handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
