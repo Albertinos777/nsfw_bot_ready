@@ -171,6 +171,9 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
                 print(f"[DEBUG] Estensione non gestita: {ext}")
                 continue
 
+             # Invia link separato sotto
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=link)
+
             cache.add(item_id)
             sent += 1
 
