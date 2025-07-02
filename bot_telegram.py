@@ -47,7 +47,8 @@ CACHE_FILES = {
     "perfectcos": "cache_perfectcos.json",
     "redgifs": "cache_redgifs.json",
     "e621": "cache_e621.json",
-    "rule34video": "cache_rule34video.json"
+    "rule34video": "cache_rule34video.json",
+    "video": "cache_video.json"
 }
 
 FAV_FILE = "favorites.json"
@@ -126,7 +127,7 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
             results += fetch_nhentai(20)
             results += fetch_rule34(20)
         elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all", "video"]:
-            results += await fetch_reddit(limit=100, target=mode, tag=mode)
+            results += await fetch_reddit(limit=100, target=mode, tag=None)
         elif mode == "real":
             results += await fetch_reddit(50, "realhot")
         elif mode == "porno":
