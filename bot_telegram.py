@@ -124,7 +124,7 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
         results += fetch_nhentai(20)
         results += fetch_rule34(20)
     elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all"]:
-        results = await fetch_reddit(limit=50, sort="hot", target="reddit_all", tag=None)
+        results += await fetch_reddit(limit=100, target=mode, tag=mode)
     elif mode == "real":
         results += await fetch_reddit(50, "realhot")
     elif mode == "porno":
