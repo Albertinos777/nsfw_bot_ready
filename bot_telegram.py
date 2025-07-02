@@ -125,7 +125,7 @@ async def send_content(update: Update, context: ContextTypes.DEFAULT_TYPE, mode)
         if mode == "hentai":
             results += fetch_nhentai(20)
             results += fetch_rule34(20)
-        elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all", "videoreddit"]:
+        elif mode in ["cosplay", "cosplayx", "gif", "creampie", "facial", "milf", "ass", "facesitting", "tightsfuck", "posing", "realhot", "rawass", "perfectcos", "reddit_all", "video"]:
             results += await fetch_reddit(limit=100, target=mode, tag=mode)
         elif mode == "real":
             results += await fetch_reddit(50, "realhot")
@@ -343,7 +343,7 @@ application.add_handler(CommandHandler("posing", lambda u, c: send_content(u, c,
 application.add_handler(CommandHandler("realhot", lambda u, c: send_content(u, c, "realhot")))
 application.add_handler(CommandHandler("rawass", lambda u, c: send_content(u, c, "rawass")))
 application.add_handler(CommandHandler("perfectcos", lambda u, c: send_content(u, c, "perfectcos")))
-application.add_handler(CommandHandler("video", send_video_pack))
+application.add_handler(CommandHandler("video", lambda u, c: send_content(u, c, "video")))
 application.add_handler(CommandHandler("autoposton", start_auto))
 application.add_handler(CommandHandler("autopostoff", stop_auto))
 application.add_handler(CommandHandler("fav", add_fav))
