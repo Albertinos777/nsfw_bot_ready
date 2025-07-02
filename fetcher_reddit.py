@@ -63,21 +63,19 @@ def sanitize_url(url):
 
 # Funzione bloccante da eseguire nel thread separato
 def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
-    print(f"[DEBUG] fetch_reddit_sync() chiamato con target={target}, sort={sort}, tag={tag}")
+    print(f"[DEBUG] fetch_reddit_sync() target={target}, sort={sort}, tag={tag}")
     results = []
     subreddits = SUBREDDITS.get(target, [])
-    
     if not subreddits:
-        print("[DEBUG] Nessun subreddit definito per questo target.")
+        print("[DEBUG] Nessun subreddit trovato per questo target.")
         return []
 
-    random.shuffle(subreddits)  # Mescola per varietà
+    chosen = random.sample(subreddits, min(len(subreddits), 5))
 
-    for sub in subreddits:
+    for sub in chosen:
         try:
             final_sort = sort or random.choice(["hot", "top", "new"])
             time_filter = random.choice(["day", "week", "month", "year", "all"])
-            print(f"[DEBUG] Fetch da {sub} con sort={final_sort}, time_filter={time_filter}")
 
             if final_sort == "top":
                 posts = reddit.subreddit(sub).top(time_filter=time_filter, limit=limit * 2)
@@ -93,8 +91,20 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 url = sanitize_url(post.url)
                 title = post.title.lower()
 
-                if "v.redd.it" in url and not url.endswith((".mp4", ".webm")):
-                    continue
+                # v.redd.it con anteprima mp4
+                if "v.redd.it" in url:
+                    if post.media and "reddit_video" in post.media:
+                        video_url = post.media["reddit_video"].get("fallback_url", "")
+                        if video_url.endswith(".mp4"):
+                            results.append({
+                                "title": post.title,
+                                "link": video_url,
+                                "thumb": post.thumbnail if post.thumbnail and post.thumbnail != "default" else None,
+                                "ext": "mp4"
+                            })
+                            if len(results) >= limit:
+                                break
+                    continue  # Salta quelli senza fallback_url
 
                 if not is_direct_media(url):
                     continue
@@ -115,14 +125,10 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 if len(results) >= limit:
                     break
 
-            if len(results) >= limit:
-                break  # Stop appena raggiungi il limite
-
         except Exception as e:
-            print(f"[!] Errore su subreddit {sub}: {e}")
+            print(f"[!] Reddit error in {sub}: {e}")
 
-    random.shuffle(results)  # Mescola i risultati finali per varietà
-    print(f"[DEBUG] fetch_reddit_sync() ha trovato {len(results)} risultati.")
+    print(f"[DEBUG] fetch_reddit_sync() trovati {len(results)} risultati.")
     return results
 
 # Wrapper asincrono per il bot
