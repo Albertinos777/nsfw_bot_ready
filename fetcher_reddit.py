@@ -32,7 +32,7 @@ SUBREDDITS = {
     "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"],
     "cosplayx": ["nsfwcosplay", "cosplaybutts", "realcosplaygonewild", "perfectcosplay", "naughtycospics"],
     "reddit_all": ["GoneWild", "NSFW_GIF", "Creampies", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"],
-    "gif": ["NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs", "NSFW_Porn_GIF", "60fpsporn", "AnalGifs"],
+    "gif": ["NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs", "NSFW_Porn_GIF", "60fpsporn", "AnalGifs", "NSFW_Video_Gifs", "Best_NSFW_Gifs"],
     "creampie": ["Creampies", "cumsluts", "AnalGW"],
     "facial": ["facial", "cumsluts", "cumonclothes"],
     "milf": ["MilfGW", "amateur_milfs", "milf", "maturemilf"],
@@ -42,7 +42,8 @@ SUBREDDITS = {
     "posing": ["NSFW_Glamour", "JustHotGirls"],
     "realhot": ["RealGirls", "NSFW_Video", "NSFW_Snapchat"],
     "rawass": ["bareass", "RealGirls", "butt"],
-    "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"]
+    "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"],
+    "video": ["NSFW_Video", "NSFW_Porn_Videos", "Best_NSFW_Videos", "RealGirls"]  # puoi aggiungere altri a piacere
 }
 
 # Filtri indesiderati
