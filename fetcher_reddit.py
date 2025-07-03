@@ -42,7 +42,7 @@ BANNED_WORDS = ["futanari", "gay", "yaoi", "trap", "dickgirl", "svg", "tiff", "d
 
 def is_direct_media(url):
     valid_ext = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"]
-    return any(url.lower().endswith(ext) for ext in valid_ext)
+    return any(url.lower().endswith(ext) for ext in valid_ext) or "redgifs.com" in url
 
 def sanitize_url(url):
     url = url.lower()
@@ -82,7 +82,7 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 url = sanitize_url(post.url)
                 title = post.title.lower()
 
-                # Se v.redd.it cerco di prendere il video diretto
+                # Se v.redd.it prendo il video diretto
                 if "v.redd.it" in url:
                     try:
                         url = post.media["reddit_video"]["fallback_url"]
@@ -91,6 +91,7 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                         print("[DEBUG] Scartato: v.redd.it senza video diretto")
                         continue
 
+                # Accetto solo media diretti o Redgifs
                 if not is_direct_media(url):
                     print(f"[DEBUG] Scartato: non è media diretto - {url}")
                     continue
@@ -102,11 +103,13 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 if tag and tag.lower() not in title:
                     continue
 
+                ext = url.split('.')[-1] if "." in url and not "redgifs" in url else "mp4"
+
                 results.append({
                     "title": post.title,
                     "link": url,
                     "thumb": url,
-                    "ext": url.split('.')[-1]
+                    "ext": ext
                 })
 
                 if len(results) >= limit:
