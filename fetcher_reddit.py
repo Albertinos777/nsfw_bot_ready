@@ -4,20 +4,13 @@ import praw
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-# ThreadPool per evitare blocchi con l'event loop del bot
 executor = ThreadPoolExecutor()
 
-# Caricamento sicuro credenziali
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET")
 REDDIT_USERNAME = os.environ.get("REDDIT_USERNAME")
 REDDIT_PASSWORD = os.environ.get("REDDIT_PASSWORD")
 
-# Controllo credenziali
-if not all([REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD]):
-    raise EnvironmentError("Credenziali Reddit mancanti nelle variabili ambiente!")
-
-# Configurazione PRAW
 reddit = praw.Reddit(
     client_id=REDDIT_CLIENT_ID,
     client_secret=REDDIT_CLIENT_SECRET,
@@ -27,12 +20,11 @@ reddit = praw.Reddit(
     check_for_async=False
 )
 
-# Subreddit organizzati
 SUBREDDITS = {
     "cosplay": ["nsfwcosplay", "cosplaygirls", "SexyCosplayGirls", "NSFWCostumes", "lewdcosplay", "cosplaybabes"],
     "cosplayx": ["nsfwcosplay", "cosplaybutts", "realcosplaygonewild", "perfectcosplay", "naughtycospics"],
     "reddit_all": ["GoneWild", "NSFW_GIF", "Creampies", "realgirls", "AnalGW", "PetiteGoneWild", "cumsluts"],
-    "gif": ["NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs", "NSFW_Porn_GIF", "60fpsporn", "AnalGifs", "NSFW_Video_Gifs", "Best_NSFW_Gifs"],
+    "gif": ["NSFW_GIF", "NSFW_GIFS", "PornGifs", "HighQualityGifs", "NSFW_Porn_GIF", "60fpsporn", "AnalGifs"],
     "creampie": ["Creampies", "cumsluts", "AnalGW"],
     "facial": ["facial", "cumsluts", "cumonclothes"],
     "milf": ["MilfGW", "amateur_milfs", "milf", "maturemilf"],
@@ -43,25 +35,21 @@ SUBREDDITS = {
     "realhot": ["RealGirls", "NSFW_Video", "NSFW_Snapchat"],
     "rawass": ["bareass", "RealGirls", "butt"],
     "perfectcos": ["cosplaygirls", "cosplaybabes", "SexyCosplayGirls"],
-    "video": ["NSFW_Video", "NSFW_Porn_Videos", "Best_NSFW_Videos", "RealGirls"]  # puoi aggiungere altri a piacere
+    "video": ["RealGirls", "NSFW_Video", "NSFW_Snapchat", "HighQualityGifs"]
 }
 
-# Filtri indesiderati
 BANNED_WORDS = ["futanari", "gay", "yaoi", "trap", "dickgirl", "svg", "tiff", "dick", "dickpick"]
 
-# Verifica URL diretto a media
 def is_direct_media(url):
     valid_ext = [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".webm"]
     return any(url.lower().endswith(ext) for ext in valid_ext)
 
-# Pulizia URL gifv -> mp4
 def sanitize_url(url):
     url = url.lower()
     if url.endswith(".gifv"):
         url = url.replace(".gifv", ".mp4")
     return url
 
-# Funzione bloccante da eseguire nel thread separato
 def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit_sync() target={target}, sort={sort}, tag={tag}")
     results = []
@@ -85,28 +73,33 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 posts = reddit.subreddit(sub).new(limit=limit * 2)
 
             for post in posts:
-                print(f"DEBUG POST: {post.title} | {post.url}")
+                print(f"[DEBUG] Controllo post: {post.title} | {post.url}")
 
                 if not post.over_18 or post.is_self:
-                    print("SCARTATO: non è over 18 o è un selfpost")
+                    print("[DEBUG] Scartato: non è over 18 o è selfpost")
                     continue
 
                 url = sanitize_url(post.url)
                 title = post.title.lower()
 
+                # Se v.redd.it cerco di prendere il video diretto
                 if "v.redd.it" in url:
                     try:
                         url = post.media["reddit_video"]["fallback_url"]
+                        print(f"[DEBUG] Video diretto v.redd.it: {url}")
                     except (KeyError, TypeError):
-                        print("SCARTATO: no fallback url")
+                        print("[DEBUG] Scartato: v.redd.it senza video diretto")
                         continue
 
                 if not is_direct_media(url):
-                    print(f"SCARTATO: non è media diretto - {url}")
+                    print(f"[DEBUG] Scartato: non è media diretto - {url}")
                     continue
 
                 if any(bad in title for bad in BANNED_WORDS):
-                    print(f"SCARTATO: parola bannata trovata in {title}")
+                    print(f"[DEBUG] Scartato: parola bannata trovata in {title}")
+                    continue
+
+                if tag and tag.lower() not in title:
                     continue
 
                 results.append({
@@ -125,7 +118,6 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
     print(f"[DEBUG] fetch_reddit_sync() trovati {len(results)} risultati.")
     return results
 
-# Wrapper asincrono per il bot
 async def fetch_reddit(limit=50, sort=None, target="reddit_all", tag=None):
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(executor, fetch_reddit_sync, limit, sort, target, tag)
