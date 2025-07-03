@@ -85,27 +85,28 @@ def fetch_reddit_sync(limit=50, sort=None, target="reddit_all", tag=None):
                 posts = reddit.subreddit(sub).new(limit=limit * 2)
 
             for post in posts:
-                if not post.over_18 or post.is_self:
-                    continue
+               print(f"DEBUG POST: {post.title} | {post.url}")
 
+                if not post.over_18 or post.is_self:
+                    print("SCARTATO: non è over 18 o è un selfpost")
+                    continue
+                
                 url = sanitize_url(post.url)
                 title = post.title.lower()
-
-                # v.redd.it con anteprima mp4
+                
                 if "v.redd.it" in url:
                     try:
-                        reddit_video_url = post.media["reddit_video"]["fallback_url"]
-                        url = reddit_video_url
+                        url = post.media["reddit_video"]["fallback_url"]
                     except (KeyError, TypeError):
+                        print("SCARTATO: no fallback url")
                         continue
-
+                
                 if not is_direct_media(url):
+                    print(f"SCARTATO: non è media diretto - {url}")
                     continue
-
+                
                 if any(bad in title for bad in BANNED_WORDS):
-                    continue
-
-                if tag and tag.lower() not in title:
+                    print(f"SCARTATO: parola bannata trovata in {title}")
                     continue
 
                 results.append({
